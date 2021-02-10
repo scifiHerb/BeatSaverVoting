@@ -93,6 +93,9 @@
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="OculusPlatform, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\OculusPlatform.dll</HintPath>
+    </Reference>
     <Reference Include="SongCore">
       <HintPath>$(BeatSaberDir)\Plugins\SongCore.dll</HintPath>
       <Private>False</Private>
@@ -117,7 +120,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>D:\Programs\SteamLibrary\steamapps\common\Beat Saberr\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
@@ -157,15 +160,13 @@
     <Compile Include="UI\VotingUI.cs" />
     <Compile Include="Utilities\BeatSaverAPIResult.cs" />
     <Compile Include="Utilities\Logging.cs" />
+    <Compile Include="Utilities\OculusHelper.cs" />
     <Compile Include="Utilities\ReflectionUtil.cs" />
     <Compile Include="Utilities\SteamHelper.cs" />
     <Compile Include="Utilities\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Harmony Patches\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\votingUI.bsml" />

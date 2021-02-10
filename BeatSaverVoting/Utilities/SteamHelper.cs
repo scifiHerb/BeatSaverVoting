@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Steamworks;
+
 namespace BeatSaverVoting.Utilities
 {
     public class SteamHelper
@@ -17,9 +14,23 @@ namespace BeatSaverVoting.Utilities
                 return _instance;
             }
         }
-        public Steamworks.HAuthTicket lastTicket;
-        public Steamworks.EResult lastTicketResult;
+        public HAuthTicket lastTicket;
+        public EResult lastTicketResult;
 
-        public Steamworks.Callback<Steamworks.GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
+        public Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
+
+        private void OnAuthTicketResponse(GetAuthSessionTicketResponse_t response)
+        {
+            if (lastTicket == response.m_hAuthTicket)
+            {
+                lastTicketResult = response.m_eResult;
+            }
+        }
+
+        public void SetupAuthTicketResponse()
+        {
+            if (m_GetAuthSessionTicketResponse == null)
+                m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>.Create(OnAuthTicketResponse);
+        }
     }
 }

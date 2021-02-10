@@ -46,7 +46,7 @@ namespace BeatSaverVoting.Utilities
         }
 
         //Gets the value of a (static?) Property specified by the object "obj" and the name "propertyName" (TYPED)
-        public static T GetProperty<T>(this object obj, string propertyName) => (T)GetProperty(obj, propertyName);
+        //public static T GetProperty<T>(this object obj, string propertyName) => (T)GetProperty(obj, propertyName);
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams", returns an object of the specified type
         public static T InvokeMethod<T>(this object obj, string methodName, params object[] methodParams) => (T)InvokeMethod(obj, methodName, methodParams);
@@ -158,18 +158,18 @@ namespace BeatSaverVoting.Utilities
             return copy;
         }
 
-        public static void SetPrivateField(this object obj, string fieldName, object value)
+        /*public static void SetPrivateField(this object obj, string fieldName, object value)
         {
             var field = obj.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(obj, value);
-        }
+        }*/
 
-        public static T GetPrivateField<T>(this object obj, string fieldName)
+        /*public static T GetPrivateField<T>(this object obj, string fieldName)
         {
             var field = obj.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             var value = field.GetValue(obj);
             return (T)value;
-        }
+        }*/
 
         public static object GetPrivateField(Type type, object obj, string fieldName)
         {

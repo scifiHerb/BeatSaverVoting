@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Security.Cryptography;
-using System.Text;
 using System.IO;
 using TMPro;
 using UnityEngine;
 using System.Linq;
-using UnityEngine.UI;
 using System.Reflection;
-using System.Collections;
-using System.Collections.Generic;
 using System.Security.AccessControl;
 using System.Security.Principal;
 namespace BeatSaverVoting.Utilities

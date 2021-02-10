@@ -9,10 +9,14 @@ using System.Reflection;
 using UnityEngine;
 using TMPro;
 using System;
+using System.IO;
+using System.Threading.Tasks;
 using UnityEngine.Networking;
 using BeatSaverVoting.Utilities;
+using IPA.Utilities;
 using Newtonsoft.Json.Linq;
 using Steamworks;
+using UnityEngine.XR;
 
 namespace BeatSaverVoting.UI
 {
@@ -23,6 +27,7 @@ namespace BeatSaverVoting.UI
         private struct Payload
         {
             public string steamID;
+            public string oculusID;
             public string ticket;
             public int direction;
         }
@@ -176,17 +181,44 @@ namespace BeatSaverVoting.UI
             //else
             try
             {
-            if (openVRHelper == null) openVRHelper = Resources.FindObjectsOfTypeAll<OpenVRHelper>().First();
-            if ((openVRHelper.vrPlatformSDK == VRPlatformSDK.OpenVR || Environment.CommandLine.ToLower().Contains("-vrmode oculus") || Environment.CommandLine.ToLower().Contains("fpfc")))
-            {
-                StartCoroutine(VoteWithSteamID(upvote));
-            }
+                var flag1 = File.Exists(Path.Combine(UnityGame.InstallPath, "Beat Saber_Data\\Plugins\\x86_64\\steam_api64.dll"));
+                if (openVRHelper == null) openVRHelper = Resources.FindObjectsOfTypeAll<OpenVRHelper>().First();
+                if (openVRHelper.vrPlatformSDK == VRPlatformSDK.Oculus || XRSettings.loadedDeviceName.IndexOf("oculus", StringComparison.OrdinalIgnoreCase) >= 0 || !flag1)
+                {
+                    StartCoroutine(VoteWithOculusID(upvote));
+                }
+                else if ((openVRHelper.vrPlatformSDK == VRPlatformSDK.OpenVR || Environment.CommandLine.ToLower().Contains("-vrmode oculus") || Environment.CommandLine.ToLower().Contains("fpfc")))
+                {
+                    StartCoroutine(VoteWithSteamID(upvote));
+                }
             }
             catch(Exception ex)
             {
-                Logging.Log.Warn("Failed To Vote For Song");
+                Logging.Log.Warn("Failed To Vote For Song " + ex.Message);
             }
 
+        }
+
+        private IEnumerator VoteWithOculusID(bool upvote)
+        {
+            UpInteractable = false;
+            DownInteractable = false;
+            voteText.text = "Voting...";
+            Logging.Log.Debug($"Getting user proof...");
+
+            var task = Task.Run(async () =>
+            {
+                var a = await OculusHelper.Instance.getUserId();
+                var b = await OculusHelper.Instance.getToken();
+
+                return (a, b);
+            });
+
+            yield return new WaitUntil(() => task.IsCompleted);
+            var (oculusId, nonce) = task.Result;
+
+            //Logging.Log.Debug($"Ticket done: " + oculusId + ", " + nonce);
+            yield return PerformVoteAPI(new Payload() {oculusID = oculusId.ToString(), ticket = nonce, direction = (upvote ? 1 : -1)}, upvote);
         }
 
         private IEnumerator VoteWithSteamID(bool upvote)
@@ -195,13 +227,6 @@ namespace BeatSaverVoting.UI
             {
                 Logging.Log.Error($"SteamManager is not initialized!");
             }
-            void OnAuthTicketResponse(GetAuthSessionTicketResponse_t response)
-            {
-                if (SteamHelper.Instance.lastTicket == response.m_hAuthTicket)
-                {
-                    SteamHelper.Instance.lastTicketResult = response.m_eResult;
-                }
-            };
 
             UpInteractable = false;
             DownInteractable = false;
@@ -215,7 +240,7 @@ namespace BeatSaverVoting.UI
             var authTicketResult = SteamUser.GetAuthSessionTicket(authTicket, 1024, out var length);
             if (authTicketResult != HAuthTicket.Invalid)
             {
-                var beginAuthSessionResult = SteamUser.BeginAuthSession(authTicket, (int)length, steamId);
+                var beginAuthSessionResult = SteamUser.BeginAuthSession(authTicket, (int) length, steamId);
                 switch (beginAuthSessionResult)
                 {
                     case EBeginAuthSessionResult.k_EBeginAuthSessionResultOK:
@@ -231,14 +256,12 @@ namespace BeatSaverVoting.UI
                                 voteText.text = "User does not\nhave license";
                                 yield break;
                             case EUserHasLicenseForAppResult.k_EUserHasLicenseResultHasLicense:
-                                if (SteamHelper.Instance.m_GetAuthSessionTicketResponse == null)
-                                    SteamHelper.Instance.m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>.Create(OnAuthTicketResponse);
-
+                                SteamHelper.Instance.SetupAuthTicketResponse();
 
                                 SteamHelper.Instance.lastTicket = SteamUser.GetAuthSessionTicket(authTicket, 1024, out length);
                                 if (SteamHelper.Instance.lastTicket != HAuthTicket.Invalid)
                                 {
-                                    Array.Resize(ref authTicket, (int)length);
+                                    Array.Resize(ref authTicket, (int) length);
                                     authTicketHexString = BitConverter.ToString(authTicket).Replace("-", "");
                                 }
 
@@ -249,6 +272,7 @@ namespace BeatSaverVoting.UI
                                 voteText.text = "User is not\nauthenticated";
                                 yield break;
                         }
+
                         break;
                     default:
                         UpInteractable = false;
@@ -274,14 +298,26 @@ namespace BeatSaverVoting.UI
 
             SteamHelper.Instance.lastTicketResult = EResult.k_EResultRevoked;
 
-            Logging.Log.Debug($"Voting...");
+            //Logging.Log.Debug("Steam info: " + steamId + ", " + authTicketHexString);
+            yield return PerformVoteAPI(new Payload() {steamID = steamId.m_SteamID.ToString(), ticket = authTicketHexString, direction = (upvote ? 1 : -1)}, upvote);
+        }
 
-            Payload payload = new Payload() { steamID = steamId.m_SteamID.ToString(), ticket = authTicketHexString, direction = (upvote ? 1 : -1) };
+        private IEnumerator PerformVoteAPI(Payload payload, bool upvote)
+        {
+            Logging.Log.Debug($"Voting...");
             string json = JsonUtility.ToJson(payload);
            // Logging.Log.Info(json);
-            UnityWebRequest voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.key}", json);
+           UnityWebRequest voteWWW;
+           if (payload.oculusID == null)
+           {
+               voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.key}", json);
+           }
+           else
+           {
+               voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/oculus/{_lastBeatSaverSong.key}", json);
+           }
 
-         //   Logging.Log.Info($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.hash}");
+           //   Logging.Log.Info($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.hash}");
          //   Logging.Log.Info($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.key}");
 
             byte[] jsonBytes = new System.Text.UTF8Encoding().GetBytes(json);
