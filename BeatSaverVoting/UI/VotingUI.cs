@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using UnityEngine.Networking;
 using BeatSaverVoting.Utilities;
 using IPA.Utilities;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Steamworks;
 using UnityEngine.XR;
@@ -27,9 +28,22 @@ namespace BeatSaverVoting.UI
         private struct Payload
         {
             public string steamID;
-            public string oculusID;
             public string ticket;
             public int direction;
+        }
+
+        [Serializable] private struct BMAuth
+        {
+            public string steamId;
+            public string oculusId;
+            public string proof;
+        }
+
+        private struct BMPayload
+        {
+            public BMAuth auth;
+            public bool direction;
+            public string hash;
         }
 
         internal IBeatmapLevel _lastSong;
@@ -67,8 +81,6 @@ namespace BeatSaverVoting.UI
                 NotifyPropertyChanged();
             }
         } 
-
-
 
         internal void Setup()
         {
@@ -174,11 +186,6 @@ namespace BeatSaverVoting.UI
 
         private void VoteForSong(bool upvote)
         {
-            //      if(PluginConfig.apiAccessToken != PluginConfig.apiTokenPlaceholder && !string.IsNullOrWhiteSpace(PluginConfig.apiAccessToken))
-            //      {
-            //          StartCoroutine(VoteWithAccessToken(upvote));
-            //      }
-            //else
             try
             {
                 var flag1 = File.Exists(Path.Combine(UnityGame.InstallPath, "Beat Saber_Data\\Plugins\\x86_64\\steam_api64.dll"));
@@ -217,8 +224,7 @@ namespace BeatSaverVoting.UI
             yield return new WaitUntil(() => task.IsCompleted);
             var (oculusId, nonce) = task.Result;
 
-            //Logging.Log.Debug($"Ticket done: " + oculusId + ", " + nonce);
-            yield return PerformVoteAPI(new Payload() {oculusID = oculusId.ToString(), ticket = nonce, direction = (upvote ? 1 : -1)}, upvote);
+            yield return PerformVoteBM(new BMPayload() { auth = new BMAuth() {oculusId = oculusId.ToString(), proof = nonce}, direction = upvote, hash = _lastBeatSaverSong.hash});
         }
 
         private IEnumerator VoteWithSteamID(bool upvote)
@@ -300,6 +306,31 @@ namespace BeatSaverVoting.UI
 
             //Logging.Log.Debug("Steam info: " + steamId + ", " + authTicketHexString);
             yield return PerformVoteAPI(new Payload() {steamID = steamId.m_SteamID.ToString(), ticket = authTicketHexString, direction = (upvote ? 1 : -1)}, upvote);
+            yield return PerformVoteBM(new BMPayload() { auth = new BMAuth() {steamId = steamId.m_SteamID.ToString(), proof = authTicketHexString}, direction = upvote, hash = _lastBeatSaverSong.hash});
+        }
+
+        private IEnumerator PerformVoteBM(BMPayload payload)
+        {
+            Logging.Log.Debug($"Voting BM...");
+            var json = JsonConvert.SerializeObject(payload);
+            Logging.Log.Info(json);
+            var voteWWW = UnityWebRequest.Post($"{Plugin.bmioURL}/vote", json);
+
+            var jsonBytes = new System.Text.UTF8Encoding().GetBytes(json);
+            voteWWW.uploadHandler = new UploadHandlerRaw(jsonBytes);
+            voteWWW.SetRequestHeader("Content-Type", "application/json");
+            voteWWW.SetRequestHeader("user-agent", userAgent);
+            voteWWW.timeout = 30;
+            yield return voteWWW.SendWebRequest();
+
+            if (voteWWW.isNetworkError)
+            {
+                Logging.Log.Error(voteWWW.error);
+            }
+            else if (voteWWW.responseCode != 200)
+            {
+                Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
+            }
         }
 
         private IEnumerator PerformVoteAPI(Payload payload, bool upvote)
@@ -308,17 +339,7 @@ namespace BeatSaverVoting.UI
             string json = JsonUtility.ToJson(payload);
            // Logging.Log.Info(json);
            UnityWebRequest voteWWW;
-           if (payload.oculusID == null)
-           {
-               voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.key}", json);
-           }
-           else
-           {
-               voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/oculus/{_lastBeatSaverSong.key}", json);
-           }
-
-           //   Logging.Log.Info($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.hash}");
-         //   Logging.Log.Info($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.key}");
+           voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.key}", json);
 
             byte[] jsonBytes = new System.Text.UTF8Encoding().GetBytes(json);
             voteWWW.uploadHandler = new UploadHandlerRaw(jsonBytes);
@@ -343,9 +364,7 @@ namespace BeatSaverVoting.UI
 
                 if (voteWWW.responseCode >= 200 && voteWWW.responseCode <= 299)
                 {
-                    //              Plugin.log.Info(voteWWW.downloadHandler.text);
                     JObject node = JObject.Parse(voteWWW.downloadHandler.text);
-                    //         Plugin.log.Info(((int)node["stats"]["upVotes"]).ToString() + " -- " + ((int)(node["stats"]["downVotes"])).ToString());
                     voteText.text = (((int)node["stats"]["upVotes"]) - ((int)node["stats"]["downVotes"])).ToString();
 
                     if (upvote)
@@ -371,43 +390,43 @@ namespace BeatSaverVoting.UI
                     }
                 }
                 else switch (voteWWW.responseCode)
+                {
+                    case 500:
                     {
-                        case 500:
-                            {
-                                UpInteractable = false;
-                                DownInteractable = false;
-                                voteText.text = "Server \nerror";
-                                Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
-                            }; break;
-                        case 401:
-                            {
-                                UpInteractable = false;
-                                DownInteractable = false;
-                                voteText.text = "Invalid\nauth ticket";
-                                Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
-                            }; break;
-                        case 404:
-                            {
-                                UpInteractable = false;
-                                DownInteractable = false;
-                                voteText.text = "Beatmap not\found";
-                                Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
-                            }; break;
-                        case 400:
-                            {
-                                UpInteractable = false;
-                                DownInteractable = false;
-                                voteText.text = "Bad\nrequest";
-                                Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
-                            }; break;
-                        default:
-                            {
-                                UpInteractable = true;
-                                DownInteractable = true;
-                                voteText.text = "Error\n" + voteWWW.responseCode;
-                                Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
-                            }; break;
-                    }
+                        UpInteractable = false;
+                        DownInteractable = false;
+                        voteText.text = "Server \nerror";
+                        Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
+                    }; break;
+                    case 401:
+                    {
+                        UpInteractable = false;
+                        DownInteractable = false;
+                        voteText.text = "Invalid\nauth ticket";
+                        Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
+                    }; break;
+                    case 404:
+                    {
+                        UpInteractable = false;
+                        DownInteractable = false;
+                        voteText.text = "Beatmap not\found";
+                        Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
+                    }; break;
+                    case 400:
+                    {
+                        UpInteractable = false;
+                        DownInteractable = false;
+                        voteText.text = "Bad\nrequest";
+                        Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
+                    }; break;
+                    default:
+                    {
+                        UpInteractable = true;
+                        DownInteractable = true;
+                        voteText.text = "Error\n" + voteWWW.responseCode;
+                        Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
+                    }; break;
+                }
             }
         }
     }

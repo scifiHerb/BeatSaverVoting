@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Media;
-using TMPro;
-using UnityEngine;
 using System.Text;
 using UnityEngine.SceneManagement;
 using IPA;
@@ -33,6 +28,7 @@ namespace BeatSaverVoting
         }
 
         internal static string beatsaverURL = "https://beatsaver.com";
+        internal static string bmioURL = "https://api.beatmaps.io";
         internal static string votedSongsPath = $"{Environment.CurrentDirectory}/UserData/votedSongs.json";
         internal static Dictionary<string, SongVote> votedSongs = new Dictionary<string, SongVote>();
         [OnStart]
