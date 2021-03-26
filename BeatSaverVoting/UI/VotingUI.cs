@@ -313,7 +313,6 @@ namespace BeatSaverVoting.UI
         {
             Logging.Log.Debug($"Voting BM...");
             var json = JsonConvert.SerializeObject(payload);
-            Logging.Log.Info(json);
             var voteWWW = UnityWebRequest.Post($"{Plugin.bmioURL}/vote", json);
 
             var jsonBytes = new System.Text.UTF8Encoding().GetBytes(json);

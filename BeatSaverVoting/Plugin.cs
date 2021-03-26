@@ -65,38 +65,9 @@ namespace BeatSaverVoting
             Utilities.Logging.Log = pluginLogger;
         }
 
-        public void OnApplicationQuit()
-        {
-
-        }
         public static void WriteVotes()
         {
             File.WriteAllText(votedSongsPath, JsonConvert.SerializeObject(votedSongs), Encoding.UTF8);
-        }
-
-        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
-        {
-
-        }
-
-        public void OnSceneUnloaded(Scene scene)
-        {
-
-        }
-
-        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
-        {
-
-        }
-
-        public void OnUpdate()
-        {
-
-        }
-
-        public void OnFixedUpdate()
-        {
-
         }
 
     }
