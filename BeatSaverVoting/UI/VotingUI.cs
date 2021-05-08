@@ -60,7 +60,7 @@ namespace BeatSaverVoting.UI
         [UIComponent("downButton")]
         public Transform downButton;
         private bool upInteractable = true;
-        [UIValue("upInteractable")]
+        [UIValue("UpInteractable")]
         public bool UpInteractable
         {
             get => upInteractable;
@@ -71,7 +71,7 @@ namespace BeatSaverVoting.UI
             }
         }
         private bool downInteractable = true;
-        [UIValue("downInteractable")]
+        [UIValue("DownInteractable")]
         public bool DownInteractable
         {
             get => downInteractable;
@@ -149,9 +149,9 @@ namespace BeatSaverVoting.UI
                     _firstVote = true;
                     JObject jNode = JObject.Parse(www.downloadHandler.text);
 
-                    if (jNode.Children().Count() > 0)
+                    if (jNode.Children().Any())
                     {
-                        _lastBeatSaverSong = new Song((JObject)jNode);
+                        _lastBeatSaverSong = new Song(jNode);
 
                         voteText.text = (_lastBeatSaverSong.upVotes - _lastBeatSaverSong.downVotes).ToString();
                         if (openVRHelper == null) openVRHelper = Resources.FindObjectsOfTypeAll<OpenVRHelper>().First();
