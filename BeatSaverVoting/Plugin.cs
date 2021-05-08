@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using UnityEngine.SceneManagement;
 using IPA;
 using IPALogger = IPA.Logging.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 namespace BeatSaverVoting
 {
+    public delegate void VoteCallback(bool success, bool userDirection, int newTotal);
+
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
     {
@@ -25,6 +26,11 @@ namespace BeatSaverVoting
                 this.key = key;
                 this.voteType = voteType;
             }
+        }
+
+        public static void VoteForSong(string key, string hash, VoteType type, VoteCallback callback)
+        {
+            UI.VotingUI.instance.VoteForSong(key, hash, type == VoteType.Upvote, callback);
         }
 
         internal static string beatsaverURL = "https://beatsaver.com";
@@ -54,14 +60,12 @@ namespace BeatSaverVoting
 
         private void BSEvents_menuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
         {
-         //   Utilities.Logging.Log.Info("Menu Scene Loaded");
             UI.VotingUI.instance.Setup();
         }
 
         [Init]
         public void Init(IPALogger pluginLogger)
         {
-
             Utilities.Logging.Log = pluginLogger;
         }
 
