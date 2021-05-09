@@ -7,7 +7,6 @@ using System.Reflection;
 using UnityEngine;
 using TMPro;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
@@ -97,7 +96,6 @@ namespace BeatSaverVoting.UI
 
         private void ResultsView_didActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            //Utilities.Logging.Log.Info("Initializing VotingUI");
             GetVotesForMap();
         }
 
@@ -297,6 +295,7 @@ namespace BeatSaverVoting.UI
                                 UpInteractable = false;
                                 DownInteractable = false;
                                 voteText.text = "User does not\nhave license";
+                                callback?.Invoke(hash, false, false, -1);
                                 yield break;
                             case EUserHasLicenseForAppResult.k_EUserHasLicenseResultHasLicense:
                                 SteamHelper.Instance.SetupAuthTicketResponse();
@@ -313,6 +312,7 @@ namespace BeatSaverVoting.UI
                                 UpInteractable = false;
                                 DownInteractable = false;
                                 voteText.text = "User is not\nauthenticated";
+                                callback?.Invoke(hash, false, false, -1);
                                 yield break;
                         }
 
@@ -321,6 +321,7 @@ namespace BeatSaverVoting.UI
                         UpInteractable = false;
                         DownInteractable = false;
                         voteText.text = "Auth\nfailed";
+                        callback?.Invoke(hash, false, false, -1);
                         yield break;
                 }
             }
@@ -336,6 +337,7 @@ namespace BeatSaverVoting.UI
                 UpInteractable = true;
                 DownInteractable = true;
                 voteText.text = "Callback\ntimeout";
+                callback?.Invoke(hash, false, false, -1);
                 yield break;
             }
 
