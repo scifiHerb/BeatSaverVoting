@@ -4,18 +4,18 @@ using UnityEngine;
 namespace BeatSaverVoting
 {
     public class CoroutineWithData {
-        public Coroutine coroutine { get; private set; }
-        public object result;
-        private IEnumerator target;
+        public Coroutine Coroutine { get; }
+        public object Result;
+        private readonly IEnumerator _target;
         public CoroutineWithData(MonoBehaviour owner, IEnumerator target) {
-            this.target = target;
-            this.coroutine = owner.StartCoroutine(Run());
+            _target = target;
+            Coroutine = owner.StartCoroutine(Run());
         }
 
         private IEnumerator Run() {
-            while(target.MoveNext()) {
-                result = target.Current;
-                yield return result;
+            while(_target.MoveNext()) {
+                Result = _target.Current;
+                yield return Result;
             }
         }
     }

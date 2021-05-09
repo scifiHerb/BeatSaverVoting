@@ -165,13 +165,13 @@ namespace BeatSaverVoting.UI
         private IEnumerator GetRatingForSong(IBeatmapLevel level)
         {
             var cd = new CoroutineWithData(this, GetSongInfo(SongCore.Utilities.Hashing.GetCustomLevelHash(level as CustomPreviewBeatmapLevel)));
-            yield return cd.coroutine;
+            yield return cd.Coroutine;
 
             try
             {
                 _firstVote = true;
 
-                if (cd.result is Song song)
+                if (cd.Result is Song song)
                 {
                     _lastBeatSaverSong = song;
 
@@ -208,9 +208,9 @@ namespace BeatSaverVoting.UI
         private IEnumerator VoteForSongAsync(string hash, bool upvote, VoteCallback callback)
         {
             var cd = new CoroutineWithData(this, GetSongInfo(hash));
-            yield return cd.coroutine;
+            yield return cd.Coroutine;
 
-            if (cd.result is Song song)
+            if (cd.Result is Song song)
             {
                 VoteForSong(song.key, hash, upvote, callback);
             }
