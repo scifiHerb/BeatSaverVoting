@@ -7,6 +7,7 @@ using System.Reflection;
 using UnityEngine;
 using TMPro;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
@@ -125,47 +126,27 @@ namespace BeatSaverVoting.UI
             StartCoroutine(GetRatingForSong(_lastSong));
         }
 
-        private IEnumerator GetRatingForSong(IBeatmapLevel level)
+        private IEnumerator GetSongInfo(string hash)
         {
-            //     Plugin.log.Info($"{PluginConfig.beatsaverURL}/api/maps/by-hash/{SongCore.Utilities.Hashing.GetCustomLevelHash(level as CustomPreviewBeatmapLevel).ToLower()}");
-            UnityWebRequest www = UnityWebRequest.Get($"{Plugin.beatsaverURL}/api/maps/by-hash/{SongCore.Utilities.Hashing.GetCustomLevelHash(level as CustomPreviewBeatmapLevel).ToLower()}");
+            var www = UnityWebRequest.Get($"{Plugin.beatsaverURL}/api/maps/by-hash/{hash.ToLower()}");
             www.SetRequestHeader("user-agent", userAgent);
 
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Logging.Log.Error($"Unable to connect to {Plugin.beatsaverURL}! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
+                Logging.Log.Error($"Unable to connect to {Plugin.beatsaverURL}! " +
+                                  (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
             }
             else
             {
+                Song result = null;
                 try
                 {
-                    _firstVote = true;
-                    JObject jNode = JObject.Parse(www.downloadHandler.text);
-
+                    var jNode = JObject.Parse(www.downloadHandler.text);
                     if (jNode.Children().Any())
                     {
-                        _lastBeatSaverSong = new Song(jNode);
-
-                        voteText.text = (_lastBeatSaverSong.upVotes - _lastBeatSaverSong.downVotes).ToString();
-                        if (openVRHelper == null) openVRHelper = Resources.FindObjectsOfTypeAll<OpenVRHelper>().First();
-                        bool canVote = openVRHelper.vrPlatformSDK == VRPlatformSDK.Oculus || openVRHelper.vrPlatformSDK == VRPlatformSDK.OpenVR ||
-                                       Environment.CommandLine.ToLower().Contains("-vrmode oculus") || Environment.CommandLine.ToLower().Contains("fpfc");
-
-                        UpInteractable = canVote;
-                        DownInteractable = canVote;
-
-                        //           _reviewButton.interactable = true;
-                        string lastLevelHash = SongCore.Utilities.Hashing.GetCustomLevelHash(_lastSong as CustomPreviewBeatmapLevel).ToLower();
-                        if (Plugin.votedSongs.ContainsKey(lastLevelHash))
-                        {
-                            switch (Plugin.votedSongs[lastLevelHash].voteType)
-                            {
-                                case Plugin.VoteType.Upvote: { UpInteractable = false; } break;
-                                case Plugin.VoteType.Downvote: { DownInteractable = false; } break;
-                            }
-                        }
+                        result = new Song(jNode);
                     }
                     else
                     {
@@ -176,9 +157,64 @@ namespace BeatSaverVoting.UI
                 {
                     Logging.Log.Critical("Unable to get song rating! Excpetion: " + e);
                 }
+
+                yield return result;
             }
         }
 
+        private IEnumerator GetRatingForSong(IBeatmapLevel level)
+        {
+            var cd = new CoroutineWithData(this, GetSongInfo(SongCore.Utilities.Hashing.GetCustomLevelHash(level as CustomPreviewBeatmapLevel)));
+            yield return cd.coroutine;
+
+            try
+            {
+                _firstVote = true;
+
+                if (cd.result is Song song)
+                {
+                    _lastBeatSaverSong = song;
+
+                    voteText.text = (_lastBeatSaverSong.upVotes - _lastBeatSaverSong.downVotes).ToString();
+                    if (openVRHelper == null) openVRHelper = Resources.FindObjectsOfTypeAll<OpenVRHelper>().First();
+                    bool canVote = openVRHelper.vrPlatformSDK == VRPlatformSDK.Oculus || openVRHelper.vrPlatformSDK == VRPlatformSDK.OpenVR ||
+                                   Environment.CommandLine.ToLower().Contains("-vrmode oculus") || Environment.CommandLine.ToLower().Contains("fpfc");
+
+                    UpInteractable = canVote;
+                    DownInteractable = canVote;
+
+                    string lastLevelHash = SongCore.Utilities.Hashing.GetCustomLevelHash(_lastSong as CustomPreviewBeatmapLevel).ToLower();
+                    if (Plugin.votedSongs.ContainsKey(lastLevelHash))
+                    {
+                        switch (Plugin.votedSongs[lastLevelHash].voteType)
+                        {
+                            case Plugin.VoteType.Upvote: { UpInteractable = false; } break;
+                            case Plugin.VoteType.Downvote: { DownInteractable = false; } break;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Log.Critical("Unable to get song rating! Excpetion: " + e);
+            }
+        }
+
+        internal void VoteForSong(string hash, bool upvote, VoteCallback callback)
+        {
+            StartCoroutine(VoteForSongAsync(hash, upvote, callback));
+        }
+
+        private IEnumerator VoteForSongAsync(string hash, bool upvote, VoteCallback callback)
+        {
+            var cd = new CoroutineWithData(this, GetSongInfo(hash));
+            yield return cd.coroutine;
+
+            if (cd.result is Song song)
+            {
+                VoteForSong(song.key, hash, upvote, callback);
+            }
+        }
 
         internal void VoteForSong(string key, string hash, bool upvote, VoteCallback callback)
         {

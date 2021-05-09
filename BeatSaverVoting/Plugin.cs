@@ -28,6 +28,11 @@ namespace BeatSaverVoting
             }
         }
 
+        public static void VoteForSong(string hash, VoteType type, VoteCallback callback)
+        {
+            UI.VotingUI.instance.VoteForSong(hash, type == VoteType.Upvote, callback);
+        }
+
         public static void VoteForSong(string key, string hash, VoteType type, VoteCallback callback)
         {
             UI.VotingUI.instance.VoteForSong(key, hash, type == VoteType.Upvote, callback);
