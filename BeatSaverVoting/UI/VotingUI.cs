@@ -104,12 +104,12 @@ namespace BeatSaverVoting.UI
         [UIAction("up-pressed")]
         private void UpvoteButtonPressed()
         {
-            VoteForSong(_lastBeatSaverSong.key, _lastBeatSaverSong.hash, true, UpdateUIAfterVote);
+            VoteForSong(_lastBeatSaverSong, true, UpdateUIAfterVote);
         }
         [UIAction("down-pressed")]
         private void DownvoteButtonPressed()
         {
-            VoteForSong(_lastBeatSaverSong.key, _lastBeatSaverSong.hash, false, UpdateUIAfterVote);
+            VoteForSong(_lastBeatSaverSong, false, UpdateUIAfterVote);
         }
 
         private void GetVotesForMap()
@@ -211,12 +211,17 @@ namespace BeatSaverVoting.UI
             yield return cd.Coroutine;
 
             if (cd.Result is Song song)
-            {
-                VoteForSong(song.key, hash, upvote, callback);
-            }
+                VoteForSong(song, upvote, callback);
         }
 
-        internal void VoteForSong(string key, string hash, bool upvote, VoteCallback callback)
+        private void VoteForSong(Song song, bool upvote, VoteCallback callback)
+        {
+            var userTotal = Plugin.votedSongs.ContainsKey(song.hash) ? (Plugin.votedSongs[song.hash].voteType == Plugin.VoteType.Upvote ? 1 : -1) : 0;
+            var oldValue = song.upVotes - song.downVotes - userTotal;
+            VoteForSong(song.key, song.hash, upvote, oldValue, callback);
+        }
+
+        private void VoteForSong(string key, string hash, bool upvote, int currentVoteCount, VoteCallback callback)
         {
             try
             {
@@ -224,11 +229,11 @@ namespace BeatSaverVoting.UI
                 if (openVRHelper == null) openVRHelper = Resources.FindObjectsOfTypeAll<OpenVRHelper>().First();
                 if (openVRHelper.vrPlatformSDK == VRPlatformSDK.Oculus || !flag1)
                 {
-                    StartCoroutine(VoteWithOculusID(hash, upvote, callback));
+                    StartCoroutine(VoteWithOculusID(hash, upvote, currentVoteCount, callback));
                 }
                 else if ((openVRHelper.vrPlatformSDK == VRPlatformSDK.OpenVR || Environment.CommandLine.ToLower().Contains("-vrmode oculus") || Environment.CommandLine.ToLower().Contains("fpfc")))
                 {
-                    StartCoroutine(VoteWithSteamID(key, hash, upvote, callback));
+                    StartCoroutine(VoteWithSteamID(key, hash, upvote, currentVoteCount, callback));
                 }
             }
             catch(Exception ex)
@@ -238,7 +243,7 @@ namespace BeatSaverVoting.UI
 
         }
 
-        private IEnumerator VoteWithOculusID(string hash, bool upvote, VoteCallback callback)
+        private IEnumerator VoteWithOculusID(string hash, bool upvote, int currentVoteCount, VoteCallback callback)
         {
             UpInteractable = false;
             DownInteractable = false;
@@ -256,10 +261,10 @@ namespace BeatSaverVoting.UI
             yield return new WaitUntil(() => task.IsCompleted);
             var (oculusId, nonce) = task.Result;
 
-            yield return PerformVoteBM(new BMPayload() { auth = new BMAuth() {oculusId = oculusId.ToString(), proof = nonce}, direction = upvote, hash = hash}, callback);
+            yield return PerformVoteBM(hash, new BMPayload() { auth = new BMAuth() {oculusId = oculusId.ToString(), proof = nonce}, direction = upvote, hash = hash}, currentVoteCount, callback);
         }
 
-        private IEnumerator VoteWithSteamID(string key, string hash, bool upvote, VoteCallback callback)
+        private IEnumerator VoteWithSteamID(string key, string hash, bool upvote, int currentVoteCount, VoteCallback callback)
         {
             if (!SteamManager.Initialized)
             {
@@ -337,11 +342,11 @@ namespace BeatSaverVoting.UI
             SteamHelper.Instance.lastTicketResult = EResult.k_EResultRevoked;
 
             //Logging.Log.Debug("Steam info: " + steamId + ", " + authTicketHexString);
-            yield return PerformVoteAPI(key, new Payload() {steamID = steamId.m_SteamID.ToString(), ticket = authTicketHexString, direction = (upvote ? 1 : -1)}, upvote, callback);
-            yield return PerformVoteBM(new BMPayload() {auth = new BMAuth() {steamId = steamId.m_SteamID.ToString(), proof = authTicketHexString}, direction = upvote, hash = hash}, null);
+            yield return PerformVoteAPI(key, hash, new Payload() {steamID = steamId.m_SteamID.ToString(), ticket = authTicketHexString, direction = (upvote ? 1 : -1)}, upvote, callback);
+            yield return PerformVoteBM(hash, new BMPayload() {auth = new BMAuth() {steamId = steamId.m_SteamID.ToString(), proof = authTicketHexString}, direction = upvote, hash = hash}, currentVoteCount, null);
         }
 
-        private IEnumerator PerformVoteBM(BMPayload payload, VoteCallback callback)
+        private IEnumerator PerformVoteBM(string hash, BMPayload payload, int currentVoteCount, VoteCallback callback)
         {
             Logging.Log.Debug($"Voting BM...");
             var json = JsonConvert.SerializeObject(payload);
@@ -357,53 +362,39 @@ namespace BeatSaverVoting.UI
             if (voteWWW.isNetworkError)
             {
                 Logging.Log.Error(voteWWW.error);
-                callback?.Invoke(false, false, -1);
+                callback?.Invoke(hash, false, false, currentVoteCount);
             }
             else if (voteWWW.responseCode != 200)
             {
                 Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
-                callback?.Invoke(false, false, -1);
+                callback?.Invoke(hash, false, false, currentVoteCount);
             } else {
-                var oldValue = _lastBeatSaverSong.upVotes - _lastBeatSaverSong.downVotes;
-                callback?.Invoke(true, payload.direction, oldValue + (payload.direction ? 1 : -1));
+                callback?.Invoke(hash, true, payload.direction, currentVoteCount + (payload.direction ? 1 : -1));
             }
         }
 
-        private void UpdateUIAfterVote(bool success, bool upvote, int newTotal) {
+        private void UpdateUIAfterVote(string hash, bool success, bool upvote, int newTotal) {
             if (!success) return;
             
             voteText.text = newTotal.ToString();
 
-            if (upvote)
+            UpInteractable = !upvote;
+            DownInteractable = upvote;
+
+            if (!Plugin.votedSongs.ContainsKey(hash) || Plugin.votedSongs[hash].voteType != (upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote))
             {
-                UpInteractable = false;
-                DownInteractable = true;
-            }
-            else
-            {
-                DownInteractable = false;
-                UpInteractable = true;
-            }
-            string lastlevelHash = SongCore.Utilities.Hashing.GetCustomLevelHash(_lastSong as CustomPreviewBeatmapLevel).ToLower();
-            if (!Plugin.votedSongs.ContainsKey(lastlevelHash))
-            {
-                Plugin.votedSongs.Add(lastlevelHash, new Plugin.SongVote(_lastBeatSaverSong.key, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote));
-                Plugin.WriteVotes();
-            }
-            else if (Plugin.votedSongs[lastlevelHash].voteType != (upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote))
-            {
-                Plugin.votedSongs[lastlevelHash] = new Plugin.SongVote(_lastBeatSaverSong.key, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote);
+                Plugin.votedSongs[hash] = new Plugin.SongVote(hash, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote);
                 Plugin.WriteVotes();
             }
         }
 
-        private IEnumerator PerformVoteAPI(string key, Payload payload, bool upvote, VoteCallback callback)
+        private IEnumerator PerformVoteAPI(string key, string hash, Payload payload, bool upvote, VoteCallback callback)
         {
             Logging.Log.Debug($"Voting...");
             string json = JsonUtility.ToJson(payload);
            // Logging.Log.Info(json);
            UnityWebRequest voteWWW;
-           voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/steam/{_lastBeatSaverSong.key}", json);
+           voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/steam/{key}", json);
 
             byte[] jsonBytes = new System.Text.UTF8Encoding().GetBytes(json);
             voteWWW.uploadHandler = new UploadHandlerRaw(jsonBytes);
@@ -429,7 +420,7 @@ namespace BeatSaverVoting.UI
                 if (voteWWW.responseCode >= 200 && voteWWW.responseCode <= 299)
                 {
                     var node = JObject.Parse(voteWWW.downloadHandler.text);
-                    callback?.Invoke(true, upvote, (int) node["stats"]["upVotes"] - (int) node["stats"]["downVotes"]);
+                    callback?.Invoke(hash, true, upvote, (int) node["stats"]["upVotes"] - (int) node["stats"]["downVotes"]);
                 }
                 else
                 {
@@ -450,7 +441,7 @@ namespace BeatSaverVoting.UI
                         case 404:
                             UpInteractable = false;
                             DownInteractable = false;
-                            voteText.text = "Beatmap not\found";
+                            voteText.text = "Beatmap not\nfound";
                             Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
                             break;
                         case 400:
@@ -466,7 +457,7 @@ namespace BeatSaverVoting.UI
                             Logging.Log.Error("Error: " + voteWWW.downloadHandler.text);
                             break;
                     }
-                    callback?.Invoke(false, false, -1);
+                    callback?.Invoke(hash, false, false, -1);
                 }
             }
         }

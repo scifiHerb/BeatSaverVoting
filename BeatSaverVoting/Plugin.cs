@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 namespace BeatSaverVoting
 {
-    public delegate void VoteCallback(bool success, bool userDirection, int newTotal);
+    public delegate void VoteCallback(string hash, bool success, bool userDirection, int newTotal);
 
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
@@ -17,13 +17,13 @@ namespace BeatSaverVoting
 
         public struct SongVote
         {
-            public string key;
+            public string hash;
             [JsonConverter(typeof(StringEnumConverter))]
             public VoteType voteType;
 
-            public SongVote(string key, VoteType voteType)
+            public SongVote(string hash, VoteType voteType)
             {
-                this.key = key;
+                this.hash = hash;
                 this.voteType = voteType;
             }
         }
@@ -31,11 +31,6 @@ namespace BeatSaverVoting
         public static void VoteForSong(string hash, VoteType type, VoteCallback callback)
         {
             UI.VotingUI.instance.VoteForSong(hash, type == VoteType.Upvote, callback);
-        }
-
-        public static void VoteForSong(string key, string hash, VoteType type, VoteCallback callback)
-        {
-            UI.VotingUI.instance.VoteForSong(key, hash, type == VoteType.Upvote, callback);
         }
 
         internal static string beatsaverURL = "https://beatsaver.com";
