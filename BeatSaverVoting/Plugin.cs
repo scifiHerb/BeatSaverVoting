@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using BeatSaverVoting.Utilities;
 using IPA;
 using IPALogger = IPA.Logging.Logger;
 using Newtonsoft.Json;
@@ -55,7 +56,7 @@ namespace BeatSaverVoting
 
         private void BSEvents_gameSceneLoaded1()
         {
-            UI.VotingUI.instance._lastSong = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.difficultyBeatmap.level;
+            UI.VotingUI.instance._lastSong = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.difficultyBeatmap.level;
         }
 
         private void BSEvents_menuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
