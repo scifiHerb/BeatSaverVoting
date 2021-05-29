@@ -168,6 +168,7 @@ namespace BeatSaverVoting.UI
             try
             {
                 _firstVote = true;
+                _lastBeatSaverSong = null;
 
                 if (cd.Result is Song song)
                 {
@@ -214,6 +215,9 @@ namespace BeatSaverVoting.UI
 
         private void VoteForSong(Song song, bool upvote, VoteCallback callback)
         {
+            if (song == null)
+                return;
+
             var userTotal = Plugin.votedSongs.ContainsKey(song.hash) ? (Plugin.votedSongs[song.hash].voteType == Plugin.VoteType.Upvote ? 1 : -1) : 0;
             var oldValue = song.upVotes - song.downVotes - userTotal;
             VoteForSong(song.key, song.hash, upvote, oldValue, callback);
