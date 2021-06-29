@@ -173,8 +173,8 @@ namespace BeatSaverVoting.Utilities
             hash = (string)jsonNode["hash"];
             hash = hash.ToLower();
             uploaded = (string)jsonNode["uploaded"];
-            downloadURL = Plugin.beatsaverURL + (string)jsonNode["downloadURL"];
-            coverURL = Plugin.beatsaverURL + (string)jsonNode["coverURL"];
+            downloadURL = Plugin.BeatsaverURL + (string)jsonNode["downloadURL"];
+            coverURL = Plugin.BeatsaverURL + (string)jsonNode["coverURL"];
             path = SongCore.Loader.CustomLevels.Values.FirstOrDefault(x => x.levelID.Split('_')[2] == hash.ToUpper())?.customLevelPath;
         }
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using BeatSaverVoting.Utilities;
 using IPA;
 using IPALogger = IPA.Logging.Logger;
 using Newtonsoft.Json;
@@ -34,23 +33,24 @@ namespace BeatSaverVoting
             UI.VotingUI.instance.VoteForSong(hash, type == VoteType.Upvote, callback);
         }
 
-        internal static string beatsaverURL = "https://beatsaver.com";
-        internal static string bmioURL = "https://api.beatmaps.io";
-        internal static string votedSongsPath = $"{Environment.CurrentDirectory}/UserData/votedSongs.json";
-        internal static Dictionary<string, SongVote> votedSongs = new Dictionary<string, SongVote>();
+        internal const string BeatsaverURL = "https://beatsaver.com";
+        internal const string BmioURL = "https://api.beatmaps.io";
+        private static readonly string VotedSongsPath = $"{Environment.CurrentDirectory}/UserData/votedSongs.json";
+        internal static Dictionary<string, SongVote> VotedSongs = new Dictionary<string, SongVote>();
+
         [OnStart]
         public void OnApplicationStart()
         {
             BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
             BS_Utils.Utilities.BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded1;
 
-            if (!File.Exists(votedSongsPath))
+            if (!File.Exists(VotedSongsPath))
             {
-                File.WriteAllText(votedSongsPath, JsonConvert.SerializeObject(votedSongs), Encoding.UTF8);
+                File.WriteAllText(VotedSongsPath, JsonConvert.SerializeObject(VotedSongs), Encoding.UTF8);
             }
             else
             {
-                votedSongs = JsonConvert.DeserializeObject<Dictionary<string, SongVote>>(File.ReadAllText(votedSongsPath, Encoding.UTF8));
+                VotedSongs = JsonConvert.DeserializeObject<Dictionary<string, SongVote>>(File.ReadAllText(VotedSongsPath, Encoding.UTF8));
             }
         }
 
@@ -72,7 +72,7 @@ namespace BeatSaverVoting
 
         public static void WriteVotes()
         {
-            File.WriteAllText(votedSongsPath, JsonConvert.SerializeObject(votedSongs), Encoding.UTF8);
+            File.WriteAllText(VotedSongsPath, JsonConvert.SerializeObject(VotedSongs), Encoding.UTF8);
         }
 
     }

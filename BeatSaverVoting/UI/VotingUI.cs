@@ -11,10 +11,13 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
 using BeatSaverVoting.Utilities;
+using BS_Utils.Utilities;
+using HMUI;
 using IPA.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Steamworks;
+using UnityEngine.UI;
 
 namespace BeatSaverVoting.UI
 {
@@ -82,15 +85,54 @@ namespace BeatSaverVoting.UI
         internal void Setup()
         {
             var resultsView = Resources.FindObjectsOfTypeAll<ResultsViewController>().FirstOrDefault();
+            Logging.Log.Error($"resultsView: {resultsView}");
+
             if (!resultsView) return;
             BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "BeatSaverVoting.UI.votingUI.bsml"), resultsView.gameObject, this);
             resultsView.didActivateEvent += ResultsView_didActivateEvent;
-            UnityEngine.UI.Image upArrow = upButton.transform.Find("Arrow")?.GetComponent<UnityEngine.UI.Image>();
-            UnityEngine.UI.Image downArrow = downButton.transform.Find("Arrow")?.GetComponent<UnityEngine.UI.Image>();
-            if(upArrow != null && downArrow != null)
+            SetColors();
+        }
+
+        private AnimationClip GenerateButtonAnimation(float r, float g, float b, float a = 0.502f, float x = 1, float y = 1)
+        {
+            return GenerateButtonAnimation(
+                AnimationCurve.Constant(0, 1, r),
+                AnimationCurve.Constant(0, 1, g),
+                AnimationCurve.Constant(0, 1, b),
+                AnimationCurve.Constant(0, 1, a),
+                AnimationCurve.Constant(0, 1, x),
+                AnimationCurve.Constant(0, 1, y)
+            );
+        }
+
+        private AnimationClip GenerateButtonAnimation(AnimationCurve r, AnimationCurve g, AnimationCurve b, AnimationCurve a, AnimationCurve x, AnimationCurve y)
+        {
+            var animation = new AnimationClip { legacy = true };
+
+            animation.SetCurve("Icon", typeof(Transform), "localScale.x", x);
+            animation.SetCurve("Icon", typeof(Transform), "localScale.y", y);
+            animation.SetCurve("Icon", typeof(Graphic), "m_Color.r", r);
+            animation.SetCurve("Icon", typeof(Graphic), "m_Color.g", g);
+            animation.SetCurve("Icon", typeof(Graphic), "m_Color.b", b);
+            animation.SetCurve("Icon", typeof(Graphic), "m_Color.a", a);
+
+            return animation;
+        }
+
+        private void SetColors()
+        {
+            var upArrow = upButton.GetComponentInChildren<ImageView>();
+            var downArrow = downButton.GetComponentInChildren<ImageView>();
+
+            if (upArrow != null && downArrow != null)
             {
-                upArrow.color = new Color(0.341f, 0.839f, 0.341f);
-                downArrow.color = new Color(0.984f, 0.282f, 0.305f);
+                var upAnim = upButton.GetComponent<ButtonStaticAnimations>();
+                var downAnim = downButton.GetComponent<ButtonStaticAnimations>();
+
+                upAnim.SetPrivateField("_normalClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f));
+                downAnim.SetPrivateField("_normalClip", GenerateButtonAnimation( 0.984f, 0.282f, 0.305f));
+                upAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f, 1, 1.5f, 1.5f));
+                downAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation( 0.984f, 0.282f, 0.305f, 1, 1.5f, 1.5f));
             }
         }
 
@@ -126,14 +168,14 @@ namespace BeatSaverVoting.UI
 
         private IEnumerator GetSongInfo(string hash)
         {
-            var www = UnityWebRequest.Get($"{Plugin.beatsaverURL}/api/maps/by-hash/{hash.ToLower()}");
+            var www = UnityWebRequest.Get($"{Plugin.BeatsaverURL}/api/maps/by-hash/{hash.ToLower()}");
             www.SetRequestHeader("user-agent", userAgent);
 
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Logging.Log.Error($"Unable to connect to {Plugin.beatsaverURL}! " +
+                Logging.Log.Error($"Unable to connect to {Plugin.BeatsaverURL}! " +
                                   (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
             }
             else
@@ -183,9 +225,9 @@ namespace BeatSaverVoting.UI
                     DownInteractable = canVote;
 
                     string lastLevelHash = SongCore.Utilities.Hashing.GetCustomLevelHash(_lastSong as CustomPreviewBeatmapLevel).ToLower();
-                    if (Plugin.votedSongs.ContainsKey(lastLevelHash))
+                    if (Plugin.VotedSongs.ContainsKey(lastLevelHash))
                     {
-                        switch (Plugin.votedSongs[lastLevelHash].voteType)
+                        switch (Plugin.VotedSongs[lastLevelHash].voteType)
                         {
                             case Plugin.VoteType.Upvote: { UpInteractable = false; } break;
                             case Plugin.VoteType.Downvote: { DownInteractable = false; } break;
@@ -221,7 +263,7 @@ namespace BeatSaverVoting.UI
                 return;
             }
 
-            var userTotal = Plugin.votedSongs.ContainsKey(song.hash) ? (Plugin.votedSongs[song.hash].voteType == Plugin.VoteType.Upvote ? 1 : -1) : 0;
+            var userTotal = Plugin.VotedSongs.ContainsKey(song.hash) ? (Plugin.VotedSongs[song.hash].voteType == Plugin.VoteType.Upvote ? 1 : -1) : 0;
             var oldValue = song.upVotes - song.downVotes - userTotal;
             VoteForSong(song.key, song.hash, upvote, oldValue, callback);
         }
@@ -359,7 +401,7 @@ namespace BeatSaverVoting.UI
         {
             Logging.Log.Debug($"Voting BM...");
             var json = JsonConvert.SerializeObject(payload);
-            var voteWWW = UnityWebRequest.Post($"{Plugin.bmioURL}/vote", json);
+            var voteWWW = UnityWebRequest.Post($"{Plugin.BmioURL}/vote", json);
 
             var jsonBytes = new System.Text.UTF8Encoding().GetBytes(json);
             voteWWW.uploadHandler = new UploadHandlerRaw(jsonBytes);
@@ -390,9 +432,9 @@ namespace BeatSaverVoting.UI
             UpInteractable = !upvote;
             DownInteractable = upvote;
 
-            if (!Plugin.votedSongs.ContainsKey(hash) || Plugin.votedSongs[hash].voteType != (upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote))
+            if (!Plugin.VotedSongs.ContainsKey(hash) || Plugin.VotedSongs[hash].voteType != (upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote))
             {
-                Plugin.votedSongs[hash] = new Plugin.SongVote(hash, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote);
+                Plugin.VotedSongs[hash] = new Plugin.SongVote(hash, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote);
                 Plugin.WriteVotes();
             }
         }
@@ -403,7 +445,7 @@ namespace BeatSaverVoting.UI
             string json = JsonUtility.ToJson(payload);
            // Logging.Log.Info(json);
            UnityWebRequest voteWWW;
-           voteWWW = UnityWebRequest.Post($"{Plugin.beatsaverURL}/api/vote/steam/{key}", json);
+           voteWWW = UnityWebRequest.Post($"{Plugin.BeatsaverURL}/api/vote/steam/{key}", json);
 
             byte[] jsonBytes = new System.Text.UTF8Encoding().GetBytes(json);
             voteWWW.uploadHandler = new UploadHandlerRaw(jsonBytes);
