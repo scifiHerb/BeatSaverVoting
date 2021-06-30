@@ -85,7 +85,6 @@ namespace BeatSaverVoting.UI
         internal void Setup()
         {
             var resultsView = Resources.FindObjectsOfTypeAll<ResultsViewController>().FirstOrDefault();
-            Logging.Log.Error($"resultsView: {resultsView}");
 
             if (!resultsView) return;
             BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "BeatSaverVoting.UI.votingUI.bsml"), resultsView.gameObject, this);
@@ -93,7 +92,7 @@ namespace BeatSaverVoting.UI
             SetColors();
         }
 
-        private AnimationClip GenerateButtonAnimation(float r, float g, float b, float a = 0.502f, float x = 1, float y = 1)
+        private static AnimationClip GenerateButtonAnimation(float r, float g, float b, float a = 0.502f, float x = 1, float y = 1)
         {
             return GenerateButtonAnimation(
                 AnimationCurve.Constant(0, 1, r),
@@ -105,7 +104,7 @@ namespace BeatSaverVoting.UI
             );
         }
 
-        private AnimationClip GenerateButtonAnimation(AnimationCurve r, AnimationCurve g, AnimationCurve b, AnimationCurve a, AnimationCurve x, AnimationCurve y)
+        private static AnimationClip GenerateButtonAnimation(AnimationCurve r, AnimationCurve g, AnimationCurve b, AnimationCurve a, AnimationCurve x, AnimationCurve y)
         {
             var animation = new AnimationClip { legacy = true };
 
@@ -124,16 +123,15 @@ namespace BeatSaverVoting.UI
             var upArrow = upButton.GetComponentInChildren<ImageView>();
             var downArrow = downButton.GetComponentInChildren<ImageView>();
 
-            if (upArrow != null && downArrow != null)
-            {
-                var upAnim = upButton.GetComponent<ButtonStaticAnimations>();
-                var downAnim = downButton.GetComponent<ButtonStaticAnimations>();
+            if (upArrow == null || downArrow == null) return;
 
-                upAnim.SetPrivateField("_normalClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f));
-                downAnim.SetPrivateField("_normalClip", GenerateButtonAnimation( 0.984f, 0.282f, 0.305f));
-                upAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f, 1, 1.5f, 1.5f));
-                downAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation( 0.984f, 0.282f, 0.305f, 1, 1.5f, 1.5f));
-            }
+            var upAnim = upButton.GetComponent<ButtonStaticAnimations>();
+            var downAnim = downButton.GetComponent<ButtonStaticAnimations>();
+
+            upAnim.SetPrivateField("_normalClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f));
+            downAnim.SetPrivateField("_normalClip", GenerateButtonAnimation(0.984f, 0.282f, 0.305f));
+            upAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f, 1, 1.5f, 1.5f));
+            downAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation( 0.984f, 0.282f, 0.305f, 1, 1.5f, 1.5f));
         }
 
         private void ResultsView_didActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
