@@ -92,9 +92,8 @@ namespace BeatSaverVoting.UI
             SetColors();
         }
 
-        private static AnimationClip GenerateButtonAnimation(float r, float g, float b, float a = 0.502f, float x = 1, float y = 1)
-        {
-            return GenerateButtonAnimation(
+        private static AnimationClip GenerateButtonAnimation(float r, float g, float b, float a, float x, float y) =>
+            GenerateButtonAnimation(
                 AnimationCurve.Constant(0, 1, r),
                 AnimationCurve.Constant(0, 1, g),
                 AnimationCurve.Constant(0, 1, b),
@@ -102,7 +101,6 @@ namespace BeatSaverVoting.UI
                 AnimationCurve.Constant(0, 1, x),
                 AnimationCurve.Constant(0, 1, y)
             );
-        }
 
         private static AnimationClip GenerateButtonAnimation(AnimationCurve r, AnimationCurve g, AnimationCurve b, AnimationCurve a, AnimationCurve x, AnimationCurve y)
         {
@@ -118,6 +116,14 @@ namespace BeatSaverVoting.UI
             return animation;
         }
 
+        private static void SetupButtonAnimation(Component t, Color c)
+        {
+            var anim = t.GetComponent<ButtonStaticAnimations>();
+
+            anim.SetPrivateField("_normalClip", GenerateButtonAnimation(c.r, c.g, c.b, 0.502f, 1, 1));
+            anim.SetPrivateField("_highlightedClip", GenerateButtonAnimation(c.r, c.g, c.b, 1, 1.5f, 1.5f));
+        }
+
         private void SetColors()
         {
             var upArrow = upButton.GetComponentInChildren<ImageView>();
@@ -125,13 +131,8 @@ namespace BeatSaverVoting.UI
 
             if (upArrow == null || downArrow == null) return;
 
-            var upAnim = upButton.GetComponent<ButtonStaticAnimations>();
-            var downAnim = downButton.GetComponent<ButtonStaticAnimations>();
-
-            upAnim.SetPrivateField("_normalClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f));
-            downAnim.SetPrivateField("_normalClip", GenerateButtonAnimation(0.984f, 0.282f, 0.305f));
-            upAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation(0.341f, 0.839f, 0.341f, 1, 1.5f, 1.5f));
-            downAnim.SetPrivateField("_highlightedClip", GenerateButtonAnimation( 0.984f, 0.282f, 0.305f, 1, 1.5f, 1.5f));
+            SetupButtonAnimation(upButton, new Color(0.341f, 0.839f, 0.341f));
+            SetupButtonAnimation(downButton, new Color(0.984f, 0.282f, 0.305f));
         }
 
         private void ResultsView_didActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
