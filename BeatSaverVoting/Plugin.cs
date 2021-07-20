@@ -33,6 +33,11 @@ namespace BeatSaverVoting
             UI.VotingUI.instance.VoteForSong(hash, type == VoteType.Upvote, callback);
         }
 
+        public static VoteType? CurrentVoteStatus(string hash)
+        {
+            return VotedSongs.ContainsKey(hash) ? VotedSongs[hash].voteType : (VoteType?) null;
+        }
+
         internal const string BeatsaverURL = "https://beatsaver.com";
         internal const string BmioURL = "https://api.beatmaps.io";
         private static readonly string VotedSongsPath = $"{Environment.CurrentDirectory}/UserData/votedSongs.json";
