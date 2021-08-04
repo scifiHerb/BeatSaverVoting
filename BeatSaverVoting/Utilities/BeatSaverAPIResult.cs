@@ -151,8 +151,14 @@ namespace BeatSaverVoting.Utilities
 
         public Song(JObject jsonNode)
         {
+            upVotes = (int)jsonNode["stats"]["upvotes"];
+            downVotes = (int)jsonNode["stats"]["downvotes"];
 
-            metadata = jsonNode["metadata"].ToObject<Metadata>();
+            hash = ((string)jsonNode["versions"][0]?["hash"])?.ToLower();
+
+            key = (string)jsonNode["id"];
+
+            /*metadata = jsonNode["metadata"].ToObject<Metadata>();
             levelAuthorName = (string)jsonNode["metadata"]["levelAuthorName"];
             songAuthorName = (string)jsonNode["metadata"]["songAuthorName"];
             songName = (string)jsonNode["metadata"]["songName"];
@@ -160,22 +166,19 @@ namespace BeatSaverVoting.Utilities
             bpm = (float)jsonNode["metadata"]["bpm"];
             downloads = (int)jsonNode["stats"]["downloads"];
             plays = (int)jsonNode["stats"]["plays"];
-            upVotes = (int)jsonNode["stats"]["upVotes"];
-            downVotes = (int)jsonNode["stats"]["downVotes"];
+
             rating = (float)jsonNode["stats"]["rating"];
             heat = (float)jsonNode["stats"]["heat"];
             description = (string)jsonNode["description"];
             _id = (string)jsonNode["_id"];
-            key = (string)jsonNode["key"];
             name = (string)jsonNode["name"];
             ownerid = (string)jsonNode["uploader"]["_id"];
             ownerName = (string)jsonNode["uploader"]["username"];
-            hash = (string)jsonNode["hash"];
-            hash = hash.ToLower();
+
             uploaded = (string)jsonNode["uploaded"];
             downloadURL = Plugin.BeatsaverURL + (string)jsonNode["downloadURL"];
             coverURL = Plugin.BeatsaverURL + (string)jsonNode["coverURL"];
-            path = SongCore.Loader.CustomLevels.Values.FirstOrDefault(x => x.levelID.Split('_')[2] == hash.ToUpper())?.customLevelPath;
+            path = SongCore.Loader.CustomLevels.Values.FirstOrDefault(x => x.levelID.Split('_')[2] == hash.ToUpper())?.customLevelPath;*/
         }
 
 
