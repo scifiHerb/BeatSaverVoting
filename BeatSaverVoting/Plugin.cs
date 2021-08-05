@@ -38,7 +38,7 @@ namespace BeatSaverVoting
             return VotedSongs.ContainsKey(hash) ? VotedSongs[hash].voteType : (VoteType?) null;
         }
 
-        internal const string BmioURL = "https://api.beatmaps.io";
+        internal const string BmioURL = "https://api.beatsaver.com";
         private static readonly string VotedSongsPath = $"{Environment.CurrentDirectory}/UserData/votedSongs.json";
         internal static Dictionary<string, SongVote> VotedSongs = new Dictionary<string, SongVote>();
 
