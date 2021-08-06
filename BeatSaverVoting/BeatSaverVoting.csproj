@@ -129,6 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CoroutineWithData.cs" />
+    <Compile Include="HarmonyPatches\LevelSelectionPatch.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\VotingUI.cs" />
@@ -139,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
+    <EmbeddedResource Include="Icons\*.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\votingUI.bsml" />
