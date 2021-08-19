@@ -47,9 +47,9 @@ namespace BeatSaverVoting.UI
         [UIComponent("voteText")]
         public TextMeshProUGUI voteText;
         [UIComponent("upButton")]
-        public Transform upButton;
+        public PageButton upButton;
         [UIComponent("downButton")]
-        public Transform downButton;
+        public PageButton downButton;
         private bool upInteractable = true;
         [UIValue("UpInteractable")]
         public bool UpInteractable
@@ -149,9 +149,12 @@ namespace BeatSaverVoting.UI
                 downButton.gameObject.SetActive(false);
                 upButton.gameObject.SetActive(false);
                 voteText.text = "";
-                voteTitle.text = "";
+                voteTitle.gameObject.SetActive(false);
                 return;
             }
+            downButton.gameObject.SetActive(true);
+            upButton.gameObject.SetActive(true);
+            voteTitle.gameObject.SetActive(true);
             voteText.text = "Loading...";
             StartCoroutine(GetRatingForSong(_lastSong));
         }

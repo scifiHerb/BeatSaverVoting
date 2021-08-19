@@ -59,7 +59,7 @@ namespace BeatSaverVoting
         public void OnApplicationStart()
         {
             BSEvents.lateMenuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
-            BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded1;
+            BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded;
 
             FavoriteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.Favorite.png");
             FavoriteUpvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.FavoriteUpvote.png");
@@ -80,7 +80,7 @@ namespace BeatSaverVoting
             }
         }
 
-        private void BSEvents_gameSceneLoaded1()
+        private void BSEvents_gameSceneLoaded()
         {
             UI.VotingUI.instance._lastSong = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.difficultyBeatmap.level;
         }
