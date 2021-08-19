@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
+using BS_Utils.Utilities;
+using HarmonyLib;
 using IPA;
 using IPALogger = IPA.Logging.Logger;
 using Newtonsoft.Json;
@@ -13,6 +17,8 @@ namespace BeatSaverVoting
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
     {
+        private static Harmony _harmony;
+
         public enum VoteType { Upvote, Downvote };
 
         public struct SongVote
@@ -42,11 +48,27 @@ namespace BeatSaverVoting
         private static readonly string VotedSongsPath = $"{Environment.CurrentDirectory}/UserData/votedSongs.json";
         internal static Dictionary<string, SongVote> VotedSongs = new Dictionary<string, SongVote>();
 
+        internal static HMUI.TableView TableView;
+        internal static UnityEngine.Sprite FavoriteIcon;
+        internal static UnityEngine.Sprite FavoriteUpvoteIcon;
+        internal static UnityEngine.Sprite FavoriteDownvoteIcon;
+        internal static UnityEngine.Sprite UpvoteIcon;
+        internal static UnityEngine.Sprite DownvoteIcon;
+
         [OnStart]
         public void OnApplicationStart()
         {
-            BS_Utils.Utilities.BSEvents.lateMenuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
-            BS_Utils.Utilities.BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded1;
+            BSEvents.lateMenuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
+            BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded1;
+
+            FavoriteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.Favorite.png");
+            FavoriteUpvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.FavoriteUpvote.png");
+            FavoriteDownvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.FavoriteDownvote.png");
+            UpvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.Upvote.png");
+            DownvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.Downvote.png");
+
+            _harmony = new Harmony("com.kyle1413.BeatSaber.BeatSaverVoting");
+            _harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             if (!File.Exists(VotedSongsPath))
             {
@@ -66,6 +88,8 @@ namespace BeatSaverVoting
         private void BSEvents_menuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
         {
             UI.VotingUI.instance.Setup();
+            TableView = UnityEngine.Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().FirstOrDefault()
+                .GetField<HMUI.TableView>("_tableView");
         }
 
         [Init]

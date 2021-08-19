@@ -71,7 +71,7 @@ namespace BeatSaverVoting.UI
                 downInteractable = value;
                 NotifyPropertyChanged();
             }
-        } 
+        }
 
         internal void Setup()
         {
@@ -448,7 +448,7 @@ namespace BeatSaverVoting.UI
 
         private void UpdateUIAfterVote(string hash, bool success, bool upvote, int newTotal) {
             if (!success) return;
-            
+
             voteText.text = newTotal.ToString();
 
             UpInteractable = !upvote;
@@ -465,6 +465,7 @@ namespace BeatSaverVoting.UI
             {
                 Plugin.VotedSongs[hash] = new Plugin.SongVote(hash, upvote ? Plugin.VoteType.Upvote : Plugin.VoteType.Downvote);
                 Plugin.WriteVotes();
+                Plugin.TableView.RefreshCellsContent();
             }
         }
     }
