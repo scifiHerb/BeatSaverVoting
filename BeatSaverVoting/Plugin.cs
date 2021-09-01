@@ -80,6 +80,12 @@ namespace BeatSaverVoting
             }
         }
 
+        [OnExit]
+        public void OnEnd()
+        {
+            _harmony.UnpatchSelf();
+        }
+
         private void BSEvents_gameSceneLoaded()
         {
             UI.VotingUI.instance._lastSong = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.difficultyBeatmap.level;
