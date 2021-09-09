@@ -37,11 +37,14 @@ namespace BeatSaverVoting.HarmonyPatches
                 }
             }
 
-            ____favoritesBadgeImage.rectTransform.sizeDelta = new Vector2(3.5f, 7);
-            var transform = ____favoritesBadgeImage.transform;
-            var position = transform.position;
-            position = new Vector3(-0.47f, position.y, position.z);
-            transform.position = position;
+            if (____favoritesBadgeImage.rectTransform.sizeDelta.x < 3.5f)
+            {
+                ____favoritesBadgeImage.rectTransform.sizeDelta = new Vector2(3.5f, 7);
+                var transform = ____favoritesBadgeImage.transform;
+                var position = transform.localPosition;
+                position = new Vector3(position.x + 1.0f, position.y, position.z);
+                transform.localPosition = position;
+            }
         }
     }
 }
