@@ -76,7 +76,7 @@ namespace BeatSaverVoting
             }
             else
             {
-                VotedSongs = JsonConvert.DeserializeObject<Dictionary<string, SongVote>>(File.ReadAllText(VotedSongsPath, Encoding.UTF8));
+                VotedSongs = JsonConvert.DeserializeObject<Dictionary<string, SongVote>>(File.ReadAllText(VotedSongsPath, Encoding.UTF8)) ?? VotedSongs;
             }
         }
 
