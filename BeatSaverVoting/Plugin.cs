@@ -7,6 +7,7 @@ using System.Text;
 using BS_Utils.Utilities;
 using HarmonyLib;
 using IPA;
+using IPA.Utilities;
 using IPALogger = IPA.Logging.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -61,11 +62,11 @@ namespace BeatSaverVoting
             BSEvents.lateMenuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
             BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded;
 
-            FavoriteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.Favorite.png");
-            FavoriteUpvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.FavoriteUpvote.png");
-            FavoriteDownvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.FavoriteDownvote.png");
-            UpvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.Upvote.png");
-            DownvoteIcon = UIUtilities.LoadSpriteFromResources("BeatSaverVoting.Icons.Downvote.png");
+            FavoriteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Favorite.png");
+            FavoriteUpvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.FavoriteUpvote.png");
+            FavoriteDownvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.FavoriteDownvote.png");
+            UpvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Upvote.png");
+            DownvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Downvote.png");
 
             _harmony = new Harmony("com.kyle1413.BeatSaber.BeatSaverVoting");
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -95,7 +96,7 @@ namespace BeatSaverVoting
         {
             UI.VotingUI.instance.Setup();
             TableView = UnityEngine.Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().FirstOrDefault()
-                .GetField<HMUI.TableView>("_tableView");
+                .GetField<HMUI.TableView, LevelCollectionTableView>("_tableView");
         }
 
         [Init]

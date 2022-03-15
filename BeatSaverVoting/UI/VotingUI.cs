@@ -11,7 +11,6 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
 using BeatSaverVoting.Utilities;
-using BS_Utils.Utilities;
 using HMUI;
 using IPA.Utilities;
 using Newtonsoft.Json;
@@ -111,8 +110,8 @@ namespace BeatSaverVoting.UI
         {
             var anim = t.GetComponent<ButtonStaticAnimations>();
 
-            anim.SetPrivateField("_normalClip", GenerateButtonAnimation(c.r, c.g, c.b, 0.502f, 1, 1));
-            anim.SetPrivateField("_highlightedClip", GenerateButtonAnimation(c.r, c.g, c.b, 1, 1.5f, 1.5f));
+            anim.SetField("_normalClip", GenerateButtonAnimation(c.r, c.g, c.b, 0.502f, 1, 1));
+            anim.SetField("_highlightedClip", GenerateButtonAnimation(c.r, c.g, c.b, 1, 1.5f, 1.5f));
         }
 
         private void SetColors()
