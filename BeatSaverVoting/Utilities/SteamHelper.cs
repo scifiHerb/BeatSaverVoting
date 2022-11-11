@@ -1,4 +1,5 @@
-﻿using Steamworks;
+﻿using System.Threading.Tasks;
+using Steamworks;
 
 namespace BeatSaverVoting.Utilities
 {
@@ -17,7 +18,7 @@ namespace BeatSaverVoting.Utilities
         public HAuthTicket lastTicket;
         public EResult lastTicketResult;
 
-        public Callback<GetAuthSessionTicketResponse_t> m_GetAuthSessionTicketResponse;
+        private readonly SteamPlatformUserModel _userModel = new SteamPlatformUserModel();
 
         private void OnAuthTicketResponse(GetAuthSessionTicketResponse_t response)
         {
@@ -27,10 +28,9 @@ namespace BeatSaverVoting.Utilities
             }
         }
 
-        public void SetupAuthTicketResponse()
+        public async Task<string> getToken()
         {
-            if (m_GetAuthSessionTicketResponse == null)
-                m_GetAuthSessionTicketResponse = Callback<GetAuthSessionTicketResponse_t>.Create(OnAuthTicketResponse);
+            return (await _userModel.GetUserAuthToken()).token;
         }
     }
 }

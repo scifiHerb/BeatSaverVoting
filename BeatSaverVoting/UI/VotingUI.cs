@@ -315,73 +315,19 @@ namespace BeatSaverVoting.UI
             Logging.Log.Debug($"Getting a ticket...");
 
             var steamId = SteamUser.GetSteamID();
-            string authTicketHexString = "";
 
-            byte[] authTicket = new byte[1024];
-            var authTicketResult = SteamUser.GetAuthSessionTicket(authTicket, 1024, out var length);
-            if (authTicketResult != HAuthTicket.Invalid)
+            var task = Task.Run(async () => await SteamHelper.Instance.getToken());
+            yield return new WaitUntil(() => task.IsCompleted);
+            var authTicketHexString = task.Result;
+
+            if (authTicketHexString == null)
             {
-                var beginAuthSessionResult = SteamUser.BeginAuthSession(authTicket, (int) length, steamId);
-                switch (beginAuthSessionResult)
-                {
-                    case EBeginAuthSessionResult.k_EBeginAuthSessionResultOK:
-                        var result = SteamUser.UserHasLicenseForApp(steamId, new AppId_t(620980));
-
-                        SteamUser.EndAuthSession(steamId);
-
-                        switch (result)
-                        {
-                            case EUserHasLicenseForAppResult.k_EUserHasLicenseResultDoesNotHaveLicense:
-                                UpInteractable = false;
-                                DownInteractable = false;
-                                voteText.text = "User does not\nhave license";
-                                callback?.Invoke(hash, false, false, -1);
-                                yield break;
-                            case EUserHasLicenseForAppResult.k_EUserHasLicenseResultHasLicense:
-                                SteamHelper.Instance.SetupAuthTicketResponse();
-
-                                SteamHelper.Instance.lastTicket = SteamUser.GetAuthSessionTicket(authTicket, 1024, out length);
-                                if (SteamHelper.Instance.lastTicket != HAuthTicket.Invalid)
-                                {
-                                    Array.Resize(ref authTicket, (int) length);
-                                    authTicketHexString = BitConverter.ToString(authTicket).Replace("-", "");
-                                }
-
-                                break;
-                            case EUserHasLicenseForAppResult.k_EUserHasLicenseResultNoAuth:
-                                UpInteractable = false;
-                                DownInteractable = false;
-                                voteText.text = "User is not\nauthenticated";
-                                callback?.Invoke(hash, false, false, -1);
-                                yield break;
-                        }
-
-                        break;
-                    default:
-                        UpInteractable = false;
-                        DownInteractable = false;
-                        voteText.text = "Auth\nfailed";
-                        callback?.Invoke(hash, false, false, -1);
-                        yield break;
-                }
-            }
-
-            Logging.Log.Debug("Waiting for Steam callback...");
-
-            float startTime = Time.time;
-            yield return new WaitWhile(() => { return SteamHelper.Instance.lastTicketResult != EResult.k_EResultOK && (Time.time - startTime) < 20f; });
-
-            if (SteamHelper.Instance.lastTicketResult != EResult.k_EResultOK)
-            {
-                Logging.Log.Error($"Auth ticket callback timeout");
-                UpInteractable = true;
-                DownInteractable = true;
-                voteText.text = "Callback\ntimeout";
+                UpInteractable = false;
+                DownInteractable = false;
+                voteText.text = "Auth\nfailed";
                 callback?.Invoke(hash, false, false, -1);
                 yield break;
             }
-
-            SteamHelper.Instance.lastTicketResult = EResult.k_EResultRevoked;
 
             //Logging.Log.Debug("Steam info: " + steamId + ", " + authTicketHexString);
             yield return PerformVoteBM(hash, new BMPayload() {auth = new BMAuth() {steamId = steamId.m_SteamID.ToString(), proof = authTicketHexString}, direction = upvote, hash = hash}, currentVoteCount, callback);
