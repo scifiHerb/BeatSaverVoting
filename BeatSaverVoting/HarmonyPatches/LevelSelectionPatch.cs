@@ -19,22 +19,17 @@ namespace BeatSaverVoting.HarmonyPatches
 
             ____favoritesBadgeImage.enabled = true;
 
-            if (isFavorite)
+            switch (voteStatus)
             {
-                switch (voteStatus)
-                {
-                    case Plugin.VoteType.Upvote: { ____favoritesBadgeImage.sprite = Plugin.FavoriteUpvoteIcon; break; }
-                    case Plugin.VoteType.Downvote: { ____favoritesBadgeImage.sprite = Plugin.FavoriteDownvoteIcon; break; }
-                    case null: { ____favoritesBadgeImage.sprite = Plugin.FavoriteIcon; break; }
-                }
-            }
-            else
-            {
-                switch (voteStatus)
-                {
-                    case Plugin.VoteType.Upvote: { ____favoritesBadgeImage.sprite = Plugin.UpvoteIcon; break; }
-                    case Plugin.VoteType.Downvote: { ____favoritesBadgeImage.sprite = Plugin.DownvoteIcon; break; }
-                }
+                case Plugin.VoteType.Upvote:
+                    ____favoritesBadgeImage.sprite = isFavorite ? Plugin.favoriteUpvoteIcon : Plugin.upvoteIcon;
+                    break;
+                case Plugin.VoteType.Downvote:
+                    ____favoritesBadgeImage.sprite = isFavorite ? Plugin.favoriteDownvoteIcon : Plugin.downvoteIcon;
+                    break;
+                default:
+                    ____favoritesBadgeImage.sprite = Plugin.favoriteIcon;
+                    break;
             }
 
             if (____favoritesBadgeImage.rectTransform.sizeDelta.x < 3.5f)

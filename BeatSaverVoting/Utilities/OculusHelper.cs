@@ -10,7 +10,7 @@ namespace BeatSaverVoting.Utilities
         private readonly OculusPlatformUserModel _userModel = new OculusPlatformUserModel();
         private ulong _userId;
 
-        public async Task<ulong> getUserId()
+        public async Task<ulong> GetUserId()
         {
             // Cache user id
             if (_userId != 0) return _userId;
@@ -22,7 +22,7 @@ namespace BeatSaverVoting.Utilities
             return _userId;
         }
 
-        public async Task<string> getToken()
+        public async Task<string> GetToken()
         {
             if (!Core.IsInitialized()) Core.Initialize();
             return (await _userModel.GetUserAuthToken()).token;

@@ -3,6 +3,6 @@ namespace BeatSaverVoting.Utilities
 {
     internal static class Logging
     {
-        public static IPALogger Log;
+        public static IPALogger log;
     }
 }

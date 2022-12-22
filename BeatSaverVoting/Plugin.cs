@@ -11,6 +11,8 @@ using IPA.Utilities;
 using IPALogger = IPA.Logging.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using UnityEngine;
+
 namespace BeatSaverVoting
 {
     public delegate void VoteCallback(string hash, bool success, bool userDirection, int newTotal);
@@ -42,19 +44,19 @@ namespace BeatSaverVoting
 
         public static VoteType? CurrentVoteStatus(string hash)
         {
-            return VotedSongs.ContainsKey(hash) ? VotedSongs[hash].voteType : (VoteType?) null;
+            return votedSongs.ContainsKey(hash) ? votedSongs[hash].voteType : (VoteType?) null;
         }
 
-        internal const string BmioURL = "https://api.beatsaver.com";
+        internal const string BeatsaverURL = "https://api.beatsaver.com";
         private static readonly string VotedSongsPath = $"{Environment.CurrentDirectory}/UserData/votedSongs.json";
-        internal static Dictionary<string, SongVote> VotedSongs = new Dictionary<string, SongVote>();
+        internal static Dictionary<string, SongVote> votedSongs = new Dictionary<string, SongVote>();
 
-        internal static HMUI.TableView TableView;
-        internal static UnityEngine.Sprite FavoriteIcon;
-        internal static UnityEngine.Sprite FavoriteUpvoteIcon;
-        internal static UnityEngine.Sprite FavoriteDownvoteIcon;
-        internal static UnityEngine.Sprite UpvoteIcon;
-        internal static UnityEngine.Sprite DownvoteIcon;
+        internal static HMUI.TableView tableView;
+        internal static Sprite favoriteIcon;
+        internal static Sprite favoriteUpvoteIcon;
+        internal static Sprite favoriteDownvoteIcon;
+        internal static Sprite upvoteIcon;
+        internal static Sprite downvoteIcon;
 
         [OnStart]
         public void OnApplicationStart()
@@ -62,22 +64,22 @@ namespace BeatSaverVoting
             BSEvents.lateMenuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
             BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded;
 
-            FavoriteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Favorite.png");
-            FavoriteUpvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.FavoriteUpvote.png");
-            FavoriteDownvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.FavoriteDownvote.png");
-            UpvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Upvote.png");
-            DownvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Downvote.png");
+            favoriteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Favorite.png");
+            favoriteUpvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.FavoriteUpvote.png");
+            favoriteDownvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.FavoriteDownvote.png");
+            upvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Upvote.png");
+            downvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Downvote.png");
 
             _harmony = new Harmony("com.kyle1413.BeatSaber.BeatSaverVoting");
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             if (!File.Exists(VotedSongsPath))
             {
-                File.WriteAllText(VotedSongsPath, JsonConvert.SerializeObject(VotedSongs), Encoding.UTF8);
+                File.WriteAllText(VotedSongsPath, JsonConvert.SerializeObject(votedSongs), Encoding.UTF8);
             }
             else
             {
-                VotedSongs = JsonConvert.DeserializeObject<Dictionary<string, SongVote>>(File.ReadAllText(VotedSongsPath, Encoding.UTF8)) ?? VotedSongs;
+                votedSongs = JsonConvert.DeserializeObject<Dictionary<string, SongVote>>(File.ReadAllText(VotedSongsPath, Encoding.UTF8)) ?? votedSongs;
             }
         }
 
@@ -87,27 +89,27 @@ namespace BeatSaverVoting
             _harmony.UnpatchSelf();
         }
 
-        private void BSEvents_gameSceneLoaded()
+        private static void BSEvents_gameSceneLoaded()
         {
-            UI.VotingUI.instance._lastSong = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.difficultyBeatmap.level;
+            UI.VotingUI.instance.lastSong = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData?.difficultyBeatmap.level;
         }
 
-        private void BSEvents_menuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
+        private static void BSEvents_menuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
         {
             UI.VotingUI.instance.Setup();
-            TableView = UnityEngine.Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().FirstOrDefault()
+            tableView = Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().FirstOrDefault()
                 .GetField<HMUI.TableView, LevelCollectionTableView>("_tableView");
         }
 
         [Init]
         public void Init(IPALogger pluginLogger)
         {
-            Utilities.Logging.Log = pluginLogger;
+            Utilities.Logging.log = pluginLogger;
         }
 
         public static void WriteVotes()
         {
-            File.WriteAllText(VotedSongsPath, JsonConvert.SerializeObject(VotedSongs), Encoding.UTF8);
+            File.WriteAllText(VotedSongsPath, JsonConvert.SerializeObject(votedSongs), Encoding.UTF8);
         }
 
     }

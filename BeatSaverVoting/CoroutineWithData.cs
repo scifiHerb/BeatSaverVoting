@@ -5,7 +5,7 @@ namespace BeatSaverVoting
 {
     public class CoroutineWithData {
         public Coroutine Coroutine { get; }
-        public object Result;
+        public object result;
         private readonly IEnumerator _target;
         public CoroutineWithData(MonoBehaviour owner, IEnumerator target) {
             _target = target;
@@ -14,8 +14,8 @@ namespace BeatSaverVoting
 
         private IEnumerator Run() {
             while(_target.MoveNext()) {
-                Result = _target.Current;
-                yield return Result;
+                result = _target.Current;
+                yield return result;
             }
         }
     }
