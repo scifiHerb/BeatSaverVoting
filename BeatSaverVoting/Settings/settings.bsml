@@ -1,0 +1,4 @@
+﻿<settings-container>
+	<checkbox text='showGood' value='showGood'></checkbox>
+	<checkbox text='showBad' value='showBad'></checkbox>
+</settings-container>

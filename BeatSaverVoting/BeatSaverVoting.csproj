@@ -135,6 +135,8 @@
     <Compile Include="HarmonyPatches\LevelSelectionPatch.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\Configuration.cs" />
+    <Compile Include="Settings\SettingsHandler.cs" />
     <Compile Include="UI\VotingUI.cs" />
     <Compile Include="Utilities\BeatSaverAPIResult.cs" />
     <Compile Include="Utilities\Logging.cs" />
@@ -147,6 +149,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\votingUI.bsml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Settings\settings.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

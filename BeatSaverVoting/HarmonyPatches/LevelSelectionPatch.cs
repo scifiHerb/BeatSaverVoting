@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BeatSaverVoting.Settings;
+using HarmonyLib;
 using UnityEngine;
 
 namespace BeatSaverVoting.HarmonyPatches
@@ -11,6 +12,9 @@ namespace BeatSaverVoting.HarmonyPatches
         {
             var hash = SongCore.Collections.hashForLevelID(level.levelID).ToLower();
             var voteStatus = Plugin.CurrentVoteStatus(hash);
+
+            if (!Configuration.Instance.showGood && voteStatus == Plugin.VoteType.Upvote) return;
+            if (!Configuration.Instance.showBad && voteStatus == Plugin.VoteType.Downvote) return;
 
             if (voteStatus == null && !isFavorite)
             {

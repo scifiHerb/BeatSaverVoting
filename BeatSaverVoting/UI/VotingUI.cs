@@ -382,7 +382,7 @@ namespace BeatSaverVoting.UI
             var rawScore = upVotes / totalVotes;
             var scoreWeighted = rawScore - (rawScore - 0.5) * Math.Pow(2.0, -Math.Log10(totalVotes + 1));
 
-            return $"{scoreWeighted:0.#%} ({totalVotes})";
+            return $"{scoreWeighted:0.#%} (↑ <color=#00ff00>{upVotes}</color>:↓<color=#800000>{downVotes}</color>)";
         }
 
         private void UpdateUIAfterVote(string hash, bool success, bool upvote, int newTotal) {

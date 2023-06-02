@@ -8,10 +8,13 @@ using BS_Utils.Utilities;
 using HarmonyLib;
 using IPA;
 using IPA.Utilities;
+using IPA.Config.Stores;
 using IPALogger = IPA.Logging.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEngine;
+using BeatSaberMarkupLanguage.Settings;
+using BeatSaverVoting.Settings;
 
 namespace BeatSaverVoting
 {
@@ -102,9 +105,11 @@ namespace BeatSaverVoting
         }
 
         [Init]
-        public void Init(IPALogger pluginLogger)
+        public void Init(IPALogger pluginLogger, IPA.Config.Config conf)
         {
             Utilities.Logging.log = pluginLogger;
+            Configuration.Instance = conf.Generated<Configuration>();
+            BSMLSettings.instance.AddSettingsMenu("BeatSaber Voting", "BeatSaverVoting.Settings.settings.bsml", SettingsHandler.instance);
         }
 
         public static void WriteVotes()
