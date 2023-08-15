@@ -1,5 +1,5 @@
 BeatsaverVotingの改造版です
-・Upvote,Downvoteアイコンの表示非表示のMod Settings追加
+・譜面リストのUpvote,Downvoteアイコンの表示非表示のMod Settings追加
 ・評価数の詳細表示
 ・譜面選択画面で評価できるように
 
