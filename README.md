@@ -1,3 +1,7 @@
-Upvote,Downvoteアイコンの表示非表示の設定追加、評価数の詳細表示追加
-![Beat Saber 2023_08_14 7_54_43](https://github.com/scifiHerb/BeatSaverVoting/assets/109839172/2a69e08e-5c42-4534-83a0-bc15c486419c)
-![Beat Saber 2023_08_14 7_54_57](https://github.com/scifiHerb/BeatSaverVoting/assets/109839172/bc877036-6bc9-4018-b510-79d3dad4c055)
+BeatsaverVotingのカスタマイズ版です
+・Upvote,Downvoteアイコンの表示非表示のMod Settings追加
+・評価数の詳細表示
+・譜面選択画面で評価できるように
+
+![Beat Saber 2023_08_15 17_05_12](https://github.com/scifiHerb/BeatSaverVoting/assets/109839172/9256e88a-f1fb-4b9e-a977-964c232af623)
+![Beat Saber 2023_08_15 16_34_42](https://github.com/scifiHerb/BeatSaverVoting/assets/109839172/91f56615-2a81-4b35-8606-b730f0f0c725)
