@@ -74,10 +74,9 @@ namespace BeatSaverVoting.UI
                 NotifyPropertyChanged();
             }
         }
-
         internal void Setup()
         {
-            var resultsView = Resources.FindObjectsOfTypeAll<ResultsViewController>().FirstOrDefault();
+            var resultsView = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().FirstOrDefault();
 
             if (!resultsView) return;
             BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "BeatSaverVoting.UI.votingUI.bsml"), resultsView.gameObject, this);
@@ -144,8 +143,9 @@ namespace BeatSaverVoting.UI
             VoteForSong(_lastBeatSaverSong, false, UpdateUIAfterVote);
         }
 
-        private void GetVotesForMap()
+        public void GetVotesForMap()
         {
+            Logging.log.Info("get vote");
             var isCustomLevel = lastSong is CustomPreviewBeatmapLevel;
             downButton.gameObject.SetActive(isCustomLevel);
             upButton.gameObject.SetActive(isCustomLevel);
@@ -208,8 +208,9 @@ namespace BeatSaverVoting.UI
                 if (!(cd.result is Song song)) yield break;
 
                 _lastBeatSaverSong = song;
+                voteTitle.text = $"";
 
-                voteText.text = GetScoreFromVotes(_lastBeatSaverSong.upVotes, _lastBeatSaverSong.downVotes);
+                voteText.text = GetScoreFromVotes(_lastBeatSaverSong.upVotes, _lastBeatSaverSong.downVotes,song);
                 if (_openVRHelper == null) _openVRHelper = Resources.FindObjectsOfTypeAll<OpenVRHelper>().First();
                 var canVote = _openVRHelper.vrPlatformSDK == VRPlatformSDK.Oculus || _openVRHelper.vrPlatformSDK == VRPlatformSDK.OpenVR ||
                               Environment.CommandLine.ToLower().Contains("-vrmode oculus") || Environment.CommandLine.ToLower().Contains("fpfc");
@@ -376,13 +377,13 @@ namespace BeatSaverVoting.UI
             voteText.text = text;
         }
 
-        private static string GetScoreFromVotes(int upVotes, int downVotes)
+        private static string GetScoreFromVotes(int upVotes, int downVotes,Song song)
         {
             double totalVotes = upVotes + downVotes;
             var rawScore = upVotes / totalVotes;
             var scoreWeighted = rawScore - (rawScore - 0.5) * Math.Pow(2.0, -Math.Log10(totalVotes + 1));
 
-            return $"{scoreWeighted:0.#%} (↑ <color=#00ff00>{upVotes}</color>:↓<color=#800000>{downVotes}</color>)";
+            return $"(↑ <color=#00ff00>{upVotes}</color>:↓<color=#800000>{downVotes}</color>)\nBSR[<color=#00FF00>{song.key}</color>]";
         }
 
         private void UpdateUIAfterVote(string hash, bool success, bool upvote, int newTotal) {
@@ -410,7 +411,7 @@ namespace BeatSaverVoting.UI
                     _lastBeatSaverSong.downVotes += 1;
                 }
 
-                voteText.text = GetScoreFromVotes(_lastBeatSaverSong.upVotes, _lastBeatSaverSong.downVotes);
+                voteText.text = GetScoreFromVotes(_lastBeatSaverSong.upVotes, _lastBeatSaverSong.downVotes,_lastBeatSaverSong);
             }
             else
             {

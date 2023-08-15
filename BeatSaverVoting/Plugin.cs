@@ -15,6 +15,7 @@ using Newtonsoft.Json.Converters;
 using UnityEngine;
 using BeatSaberMarkupLanguage.Settings;
 using BeatSaverVoting.Settings;
+using BeatSaverVoting.UI;
 
 namespace BeatSaverVoting
 {
@@ -64,7 +65,7 @@ namespace BeatSaverVoting
         [OnStart]
         public void OnApplicationStart()
         {
-            BSEvents.lateMenuSceneLoadedFresh += BSEvents_menuSceneLoadedFresh;
+            BSEvents.menuSceneActive += BSEvents_levelSelected;
             BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded;
 
             favoriteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Favorite.png");
@@ -99,9 +100,20 @@ namespace BeatSaverVoting
 
         private static void BSEvents_menuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
         {
-            UI.VotingUI.instance.Setup();
-            tableView = Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().FirstOrDefault()
-                .GetField<HMUI.TableView, LevelCollectionTableView>("_tableView");
+        }
+
+        private static bool flag = false;
+        private static void
+        BSEvents_levelSelected()
+        {
+            if (!flag)
+            {
+                UI.VotingUI.instance.Setup();
+                tableView = Resources.FindObjectsOfTypeAll<LevelCollectionTableView>().FirstOrDefault()
+                    .GetField<HMUI.TableView, LevelCollectionTableView>("_tableView");
+            }
+            flag = true;
+            UI.VotingUI.instance.GetVotesForMap();
         }
 
         [Init]
