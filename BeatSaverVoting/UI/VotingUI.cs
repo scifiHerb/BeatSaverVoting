@@ -145,7 +145,12 @@ namespace BeatSaverVoting.UI
 
         public void GetVotesForMap()
         {
-            Logging.log.Info("get vote");
+            if (!downButton)
+            {
+                UI.VotingUI.instance.Setup();
+                return;
+            }
+
             var isCustomLevel = lastSong is CustomPreviewBeatmapLevel;
             downButton.gameObject.SetActive(isCustomLevel);
             upButton.gameObject.SetActive(isCustomLevel);

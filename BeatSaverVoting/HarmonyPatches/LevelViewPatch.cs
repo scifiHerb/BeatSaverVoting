@@ -5,14 +5,13 @@ using TMPro;
 using System.Threading.Tasks;
 using System;
 using Newtonsoft.Json;
-using showLevelStats;
 using HMUI;
 
-namespace showLevelStats.HarmonyPatches
+namespace BeatSaverVoting.HarmonyPatches
 {
     [HarmonyPatch(typeof(StandardLevelDetailView))]
     [HarmonyPatch("SetContent", MethodType.Normal)]
-    internal class LevelListTableCellSetDataFromLevel
+    internal class HookLevelData
     {
         public static CurvedTextMeshPro textMesh;
 
