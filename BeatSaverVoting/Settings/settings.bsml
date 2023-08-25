@@ -1,4 +1,5 @@
 ﻿<settings-container>
 	<checkbox text='showGood' value='showGood'></checkbox>
 	<checkbox text='showBad' value='showBad'></checkbox>
+	<checkbox text='showBSR' value='showBSR'></checkbox>
 </settings-container>

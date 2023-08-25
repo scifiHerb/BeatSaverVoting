@@ -11,5 +11,7 @@ namespace BeatSaverVoting.Settings
         public static Configuration Instance { get; set; } = null;
         public virtual bool showGood { get; set; } = true;
         public virtual bool showBad { get; set; } = false;
+
+        public virtual bool showBSR { get; set; } = true;
     }
 }

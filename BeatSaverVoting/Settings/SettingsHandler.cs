@@ -27,5 +27,14 @@ namespace BeatSaverVoting.Settings
                 Configuration.Instance.showBad = value;
             }
         }
+        [UIValue("showBSR")]
+        public bool showBSR
+        {
+            get => Configuration.Instance.showBSR;
+            set
+            {
+                Configuration.Instance.showBSR = value;
+            }
+        }
     }
 }

@@ -16,6 +16,7 @@ using UnityEngine;
 using BeatSaberMarkupLanguage.Settings;
 using BeatSaverVoting.Settings;
 using BeatSaverVoting.UI;
+using UnityEngine.SceneManagement;
 
 namespace BeatSaverVoting
 {
@@ -67,6 +68,7 @@ namespace BeatSaverVoting
         {
             BSEvents.menuSceneActive += BSEvents_levelSelected;
             BSEvents.gameSceneLoaded += BSEvents_gameSceneLoaded;
+            SceneManager.sceneLoaded += SceneLoaded;
 
             favoriteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.Favorite.png");
             favoriteUpvoteIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("BeatSaverVoting.Icons.FavoriteUpvote.png");
@@ -85,6 +87,12 @@ namespace BeatSaverVoting
             {
                 votedSongs = JsonConvert.DeserializeObject<Dictionary<string, SongVote>>(File.ReadAllText(VotedSongsPath, Encoding.UTF8)) ?? votedSongs;
             }
+        }
+
+        void SceneLoaded(Scene nextScene, LoadSceneMode mode)
+        {
+            Debug.Log(nextScene.name);
+            Debug.Log(mode);
         }
 
         [OnExit]

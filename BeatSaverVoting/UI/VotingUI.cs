@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Steamworks;
 using UnityEngine.UI;
+using BeatSaverVoting.Settings;
 
 namespace BeatSaverVoting.UI
 {
@@ -43,6 +44,8 @@ namespace BeatSaverVoting.UI
         private OpenVRHelper _openVRHelper;
         private Song _lastBeatSaverSong;
         private readonly string _userAgent = $"BeatSaverVoting/{Assembly.GetExecutingAssembly().GetName().Version}";
+        [UIComponent("root")]
+        public RectTransform root;
         [UIComponent("voteTitle")]
         public TextMeshProUGUI voteTitle;
         [UIComponent("voteText")]
@@ -59,7 +62,8 @@ namespace BeatSaverVoting.UI
             get => _upInteractable;
             set
             {
-                _upInteractable = value;
+                //_upInteractable = value;
+                _upInteractable = true;
                 NotifyPropertyChanged();
             }
         }
@@ -70,7 +74,7 @@ namespace BeatSaverVoting.UI
             get => _downInteractable;
             set
             {
-                _downInteractable = value;
+                _downInteractable = true;
                 NotifyPropertyChanged();
             }
         }
@@ -81,7 +85,9 @@ namespace BeatSaverVoting.UI
             if (!resultsView) return;
             BSMLParser.instance.Parse(BeatSaberMarkupLanguage.Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "BeatSaverVoting.UI.votingUI.bsml"), resultsView.gameObject, this);
             resultsView.didActivateEvent += ResultsView_didActivateEvent;
+            resultsView.didDeactivateEvent += ResultsView_didDeactivateEvent;
             SetColors();
+            
         }
 
         private static AnimationClip GenerateButtonAnimation(float r, float g, float b, float a, float x, float y) =>
@@ -129,6 +135,15 @@ namespace BeatSaverVoting.UI
 
         private void ResultsView_didActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
+            //Logging.log.Info("Activate");
+            root.gameObject.SetActive(true);
+
+            GetVotesForMap();
+        }
+        private void ResultsView_didDeactivateEvent(bool removedFromHierarchy, bool screenSystemDisabling)
+        {
+            //Logging.log.Info("DEACTIVATE");
+            root.gameObject.SetActive(false);
             GetVotesForMap();
         }
 
@@ -151,6 +166,11 @@ namespace BeatSaverVoting.UI
                 return;
             }
 
+            root.SetParent(GameObject.Find("ScreenContainer").transform);
+            root.localPosition = new Vector3(78, -15, 0);
+            root.name = "voteRoot";
+
+            //-------------
             var isCustomLevel = lastSong is CustomPreviewBeatmapLevel;
             downButton.gameObject.SetActive(isCustomLevel);
             upButton.gameObject.SetActive(isCustomLevel);
@@ -388,7 +408,10 @@ namespace BeatSaverVoting.UI
             var rawScore = upVotes / totalVotes;
             var scoreWeighted = rawScore - (rawScore - 0.5) * Math.Pow(2.0, -Math.Log10(totalVotes + 1));
 
-            return $"(↑ <color=#00ff00>{upVotes}</color>:↓<color=#800000>{downVotes}</color>)\nBSR[<color=#00FF00>{song.key}</color>]";
+            var str = $"(↑<color=#00ff00>{upVotes}</color>:↓<color=#800000>{downVotes}</color>)\n";
+            if (Configuration.Instance.showBSR) str += $"BSR[<color=#00FF00>{song.key}</color>]\n";
+
+            return str;
         }
 
         private void UpdateUIAfterVote(string hash, bool success, bool upvote, int newTotal) {
@@ -401,7 +424,7 @@ namespace BeatSaverVoting.UI
 
             if (hash == _lastBeatSaverSong.hash)
             {
-                if (hasPreviousVote)
+                /*if (hasPreviousVote)
                 {
                     var diff = upvote ? 1 : -1;
                     _lastBeatSaverSong.upVotes += diff;
@@ -415,7 +438,7 @@ namespace BeatSaverVoting.UI
                 {
                     _lastBeatSaverSong.downVotes += 1;
                 }
-
+                */
                 voteText.text = GetScoreFromVotes(_lastBeatSaverSong.upVotes, _lastBeatSaverSong.downVotes,_lastBeatSaverSong);
             }
             else
