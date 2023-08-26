@@ -409,7 +409,7 @@ namespace BeatSaverVoting.UI
             var scoreWeighted = rawScore - (rawScore - 0.5) * Math.Pow(2.0, -Math.Log10(totalVotes + 1));
 
             var str = $"(↑<color=#00ff00>{upVotes}</color>:↓<color=#800000>{downVotes}</color>)\n";
-            if (Configuration.Instance.showBSR) str += $"BSR[<color=#00FF00>{song.key}</color>]\n";
+            if (Configuration.Instance.showBSR) str += $"BSR[<color=#00FF00>{song.key}</color>]";
 
             return str;
         }

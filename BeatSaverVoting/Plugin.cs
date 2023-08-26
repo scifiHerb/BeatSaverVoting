@@ -91,8 +91,6 @@ namespace BeatSaverVoting
 
         void SceneLoaded(Scene nextScene, LoadSceneMode mode)
         {
-            Debug.Log(nextScene.name);
-            Debug.Log(mode);
         }
 
         [OnExit]
