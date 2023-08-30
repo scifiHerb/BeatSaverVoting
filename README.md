@@ -14,6 +14,7 @@ BeatsaverVotingの改造版です
 
 ・BSR表示のON OFF出来るように
 
+2023/8/30:UI位置の変更
+![Beat Saber 2023_08_30 14_15_28](https://github.com/scifiHerb/BeatSaverVoting/assets/109839172/b13f4877-7775-43ce-9cf3-8797e5dfb04e)
 
-![Beat Saber 2023_08_25 17_45_50](https://github.com/scifiHerb/BeatSaverVoting/assets/109839172/b8cea666-4640-480f-87ae-17e19f8959ca)
 ![Beat Saber 2023_08_25 15_58_42](https://github.com/scifiHerb/BeatSaverVoting/assets/109839172/b1b715e0-d28b-4e07-87eb-499b03058005)
